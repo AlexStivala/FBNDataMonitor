@@ -1,0 +1,58 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TDFDow30.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="TDF_IPAddress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">172.18.23.26</Value>
+    </Setting>
+    <Setting Name="TDF_Port" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">11113</Value>
+    </Setting>
+    <Setting Name="TDF_UserName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">DFD03</Value>
+    </Setting>
+    <Setting Name="TDF_PW" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">AAA</Value>
+    </Setting>
+    <Setting Name="dbConn" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1&lt;/ConnectionString&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1</Value>
+    </Setting>
+    <Setting Name="Reset_Connection" Type="System.TimeSpan" Scope="Application">
+      <Value Profile="(Default)">01:45:00</Value>
+    </Setting>
+    <Setting Name="dbTableName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Russel3000</Value>
+    </Setting>
+    <Setting Name="Dynamic" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ZipperFilePath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">p:\</Value>
+    </Setting>
+    <Setting Name="DebugMode" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="spUpdate" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">sp_UpdateSymbolDataRussel3000</Value>
+    </Setting>
+    <Setting Name="updateZipperFile" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="updateChartData" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="chartTableName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">X20ChartData</Value>
+    </Setting>
+    <Setting Name="spUpdateChart" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">sp_Insert_ChartData</Value>
+    </Setting>
+    <Setting Name="TDFServer_ID" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

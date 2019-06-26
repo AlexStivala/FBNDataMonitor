@@ -1,0 +1,8 @@
+
+Server : 10.232.77.71
+User: X2ouser
+PW:  C0mpl1cat3d@1
+
+
+Connection string:  Data Source=10.232.77.71;Initial Catalog=X20Financial_TDF;Persist Security Info=True;User ID=X2ouser;Password=C0mpl1cat3d@1
+
