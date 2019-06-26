@@ -84,9 +84,6 @@ namespace TDFDow30
         public bool pageDataFlag = false;
         public string FITstr = "";
 
-        public string lastQuery = null;
-
-
         public Chart_Data ch = new Chart_Data();
         public Chart_Info chartInfo = new Chart_Info();
         public List<Chart_Data> charts = new List<Chart_Data>();
