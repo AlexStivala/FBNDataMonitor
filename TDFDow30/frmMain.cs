@@ -38,6 +38,7 @@ namespace TDFDow30
         public bool updateFlag = false;
         public bool symbolError = false;
         public int nSkip = 0;
+        public static DateTime lastDataReceived = DateTime.Now;
 
 
         itf_Header stdHeadr = new itf_Header()
@@ -125,18 +126,22 @@ namespace TDFDow30
         public ushort msgSize = 0;
         public int dataLeft = 0;
 
-        TimeSpan marketOpen = new TimeSpan(9, 29, 58); //9:30 am
-        TimeSpan marketClose = new TimeSpan(16, 10, 0); //4:06 pm  somtimes data is updated a bit after market close
+        public TimeSpan marketOpen = new TimeSpan(9, 29, 58); //9:30 am
+        public TimeSpan marketClose = new TimeSpan(16, 10, 0); //4:06 pm  somtimes data is updated a bit after market close
+        public TimeSpan oneMinute = new TimeSpan(0, 1, 1); // 1 min and 1 sec
+        public TimeSpan tenMinutes = new TimeSpan(0, 10, 1); // 10 min and 1 sec
+        public TimeSpan tenSeconds = new TimeSpan(0, 0, 10); // 10 sec
 
         public static int nSymGood = 0;
         public static int nSymBad = 0;
         public UInt64 tCnt = 0;
-        public int npersec = 0;
+        public int nSymPerSec = 0;
         public int oldCnt = 0;
         public int nTick = 0;
         public int nTickTot = 0;
         public int nSec = 0;
-        public int npermin = 0;
+        public int nTickPerMin = 0;
+        public int nSymPerMin = 0;
         public int nDup = 0;
         public DateTime day = DateTime.Today;
         public bool todayIsHoliday = false;
@@ -1310,7 +1315,7 @@ namespace TDFDow30
 
                     }
                     //label2.Text = $"Updated: {nSymGood} - Err: {nSymBad}";
-                    label2.Text = $"Total Ticks: {nSymGood}";
+                    label2.Text = $"Total Symbols: {nSymGood}";
                     label9.Text = $"Bad Symbols: {nSymBad}";
                     nTick++;
                 }
@@ -1497,14 +1502,13 @@ namespace TDFDow30
                             TDFProcessingFunctions.SetSymbolData(TDFGlobals.financialResults, i, symbolIndex);
 
                         }
-                        else
+                        else if(sym.Length > 0)
                         {
                             fin_Data fd1 = new fin_Data();
-                            fd1 = TDFGlobals.financialResults[i];
-                            if (sym.Length > 0)
-                                fixSymbols(fd1);
                             log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd1.fieldName}");
-
+                            fd1 = TDFGlobals.financialResults[i];
+                            fixSymbols(fd1);
+                            
                         }
                         if (TDFGlobals.financialResults[i].fieldName == "issuerName")
                         {
@@ -1547,6 +1551,40 @@ namespace TDFDow30
             catch (Exception ex)
             {
                 log.Error($"UpdateDynamicSymbols: {ex}");
+                TRdata.Clear();
+                
+                log.Debug($"Starting error reset procedure.....");
+                resetting = true;
+                timer1.Enabled = false;
+                if (dynamic)
+                {
+                    UnsubscribeAll();
+                    log.Debug("Unsubscribe complete.");
+                }
+                DisconnectFromTDF();
+                TDFGlobals.symbols.Clear();
+                TDFGlobals.financialResults.Clear();
+                TRdata.Clear();
+                log.Debug($"Reconnecting now .....");
+
+                //log.Debug("Starting reconnect...");
+                ConnectToTDF();
+                Thread.Sleep(2000);
+                resetting = false;
+                if (TRConnected == true)
+                {
+                    resetComplete = true;
+                    timer1.Enabled = true;
+                    log.Debug("Reset complete.");
+                }
+                else
+                {
+                    resetFlag = true;
+                    string msg = "[" + DateTime.Now + "] TDFDow30 reset error. Failed to reconnect after timed disconnect.";
+                    SendEmail(msg);
+                    log.Debug("TDFDow30 reset error. Failed to reconnect after timed disconnect.");
+                }
+
             }
             finally
             {
@@ -1693,8 +1731,8 @@ namespace TDFDow30
                             row.DefaultCellStyle.BackColor = Color.White;
                             row.DefaultCellStyle.ForeColor = Color.Black;
                         }
-                        
 
+                        lastDataReceived = DateTime.Now;
                         nSymGood++;
                     }
                     else
@@ -2004,23 +2042,51 @@ namespace TDFDow30
         {
             timeOfDayLabel.Text = DateTime.Now.ToString("MMM d, yyyy -- h:mm:ss tt");
             nSec++;
-            npersec = nSymGood - oldCnt;
+            nSymPerSec = nSymGood - oldCnt;
+            nSymPerMin += nSymPerSec;
 
             //nTickTot += nTick;
             //if (nSec % 60 == 0)
-                //npermin = nTickTot / (nSec / 60);
+            //nTickPerMin = nTickTot / (nSec / 60);
+
+            TDFGlobals.marketOpenStatus = MarketFunctions.IsMarketOpen();
+
+
+            /*
+            TimeSpan dataCheckTime = new TimeSpan();
+
+            if (TDFGlobals.marketOpenStatus)
+                dataCheckTime = tenSeconds;
+            else
+                dataCheckTime = tenMinutes;
+
+            if (DateTime.Now - lastDataReceived > dataCheckTime)
+            {
+                TRdata.Clear();
+                ServerReset(false);
+                if (TDFGlobals.marketOpenStatus)
+                {
+                    ReconnectTimer.Interval = 100;
+                    ReconnectTimer.Enabled = false;
+                    ReconnectTimer.Enabled = true;
+                    log.Debug($"Reconnecting now.....");
+                }
+            }
+            */
 
             nTickTot += nTick;
             if (nSec % 60 == 0)
             {
-                npermin = nTickTot;
+                nTickPerMin = nTickTot;
                 nTickTot = 0;
+                label1.Text = $"Symbols/Min: {nSymPerMin}";
+                nSymPerMin = 1;
             }
 
 
-            label5.Text = $"Ticks/Sec: {npersec}";
+            label5.Text = $"Symbols/Sec: {nSymPerSec}";
             label10.Text = $"Updates/Sec: {nTick}";
-            label11.Text = $"Updates/Min: {npermin}";
+            label11.Text = $"Updates/Min: {nTickPerMin}";
             label12.Text = $"Repeats/Update: {nDup}";
             oldCnt = nSymGood;
             nTick = 0;
@@ -2231,7 +2297,8 @@ namespace TDFDow30
             TDFGlobals.symbols.Clear();
             TDFGlobals.financialResults.Clear();
             
-            ReconnectTimer.Interval = 60000 * resetMinutes; 
+            ReconnectTimer.Interval = 60000 * resetMinutes;
+            ReconnectTimer.Enabled = false;
             ReconnectTimer.Enabled = true;
             log.Debug($"Reconnecting in {resetMinutes} minutes.....");
             
@@ -2554,6 +2621,7 @@ namespace TDFDow30
         private void ReconnectTimer_Tick(object sender, EventArgs e)
         {
             ReconnectTimer.Enabled = false;
+            log.Debug("Starting reconnect...");
             ConnectToTDF();
             Thread.Sleep(2000);
             resetting = false;
@@ -2561,7 +2629,7 @@ namespace TDFDow30
             {
                 resetComplete = true;
                 timer1.Enabled = true;
-                log.Debug("Reset complete");
+                log.Debug("Reset complete.");
             }
             else
             {

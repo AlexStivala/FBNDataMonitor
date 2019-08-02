@@ -45,6 +45,45 @@ namespace TDFInterface
 
         }
 
+        public static bool IsMarketOpen()
+        {
+
+            bool todayIsHoliday = IsMarketHoliday(DateTime.Now);
+            bool isMarketOpen;
+
+            TimeSpan currentTime = DateTime.Now.TimeOfDay;
+            if (!todayIsHoliday && currentTime > TDFGlobals.marketOpen && currentTime < TDFGlobals.marketClose)
+                isMarketOpen = true;
+            else
+                isMarketOpen = false;
+
+            return isMarketOpen;
+
+        }
+
+        public static DateTime GetLastMarketDate(DateTime checkDate)
+        {
+            bool done = false;
+            bool isHoliday = false;
+            isHoliday = MarketFunctions.IsMarketHoliday(checkDate);
+
+            if (isHoliday)
+            {
+                // walk yesterday date back until last market date found
+                while (!done)
+                {
+                    isHoliday = MarketFunctions.IsMarketHoliday(checkDate);
+                    if (isHoliday)
+                        checkDate = checkDate.AddDays(-1);
+                    else
+                        done = true;
+                }
+            }
+
+            return checkDate;
+
+        }
+
         public static List<MarketModel.MarketHolidays> GetMarketHolidays()
         {
             string dbConnStr = "Data Source=10.232.77.71;Initial Catalog=X20Financial_TDF;Persist Security Info=True;User ID=X2ouser;Password=C0mpl1cat3d@1";
@@ -432,55 +471,7 @@ namespace TDFInterface
 
             return SP500;
         }
-        /*
-        public static List<MarketModel.marketSort> GetMarketData(AsynchronousServerSocket.AsyncServerSocket.SocketResponse e, DataRequestModel.GraphicsRequest gr)
-        {
-            string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
-            string queryStr = "getMarketData @NumToReturn, @MktIndex, @DataType, @Sector";
-
-            SqlConnection dbConn = new SqlConnection(dbConnStr);
-            dbConn.Open();
-
-            SqlCommand cmd = new SqlCommand(queryStr, dbConn);
-            cmd.Parameters.Add("@NumberToReturn", SqlDbType.Int).Value = gr.symbols.Count;
-            cmd.Parameters.Add("@MktIndex", SqlDbType.Int).Value = Convert.ToInt32(gr.index);
-            cmd.Parameters.Add("@DataType", SqlDbType.Int).Value = Convert.ToInt32(gr.id) - 40000;
-            cmd.Parameters.Add("@Sector", SqlDbType.Int).Value = Convert.ToInt32(gr.sector);
-            cmd.CommandType = CommandType.Text;
-
-            SqlDataReader sqlData = cmd.ExecuteReader();
-
-            DataTable dt = new DataTable();
-            dt.Load(sqlData);
-
-            dbConn.Close();
-            sqlData.Close();
-
-            List<MarketModel.marketSort> marketData = new List<MarketModel.marketSort>();
-
-            if (dt.Rows.Count > 0)
-            {
-                for (int i = 0; i < dt.Rows.Count; i++)
-                {
-
-                    MarketModel.marketSort ms = new MarketModel.marketSort();
-                    DataRow row;
-
-                    row = dt.Rows[i];
-                    ms.symbol = row["Symbol"].ToString().Trim();
-                    ms.trdPrc = Convert.ToSingle(row["Last"]);
-                    ms.chng = Convert.ToSingle(row["Change"]);
-                    ms.pcntChg = Convert.ToSingle(row["PercentChange"]);
-                    ms.cumVol = Convert.ToInt64(row["Volume"]);
-                    marketData.Add(ms);
-
-                }
-
-            }
-
-            return marketData;
-        }
-        */
+        
         public static MarketModel.ServerReset GetServerResetSched(int serverId)
         {
 

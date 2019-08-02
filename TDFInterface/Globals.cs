@@ -24,6 +24,12 @@ namespace TDFInterface
         [Description("Charts")]
         Charts = 4,
 
+        [Description("Change Since")]
+        ChangeSince = 5,
+
+        [Description("Pulse")]
+        Pulse = 6,
+
     }
     public enum XMLTypes
     {
@@ -39,7 +45,31 @@ namespace TDFInterface
         [Description("bpPages")]
         bpPages = 3,
 
+        [Description("marketStatistics")]
+        marketStatistics = 4,
+
     }
+
+    public enum RequestTypes
+    {
+        [Description("Quotes")]
+        Quotes = 0,
+
+        [Description("Charts")]
+        Charts = 1,
+
+        [Description("Change Since")]
+        ChangeSince = 2,
+
+        [Description("Pulse")]
+        Pulse = 3,
+
+        [Description("Winners and losers")]
+        Winners = 4,
+
+    }
+
+
 
     public class TDFconstants
     {
@@ -87,6 +117,10 @@ namespace TDFInterface
 
         public static bool showAllFields { get; set; }
         public static List<string> Dow30symbols = new List<string>();
+        public DateTime serverReset;
+        public static TimeSpan marketOpen = new TimeSpan(9, 30, 00); //9:30 am
+        public static TimeSpan marketClose = new TimeSpan(16, 00, 0); //4:00 pm 
+        public static bool marketOpenStatus;
 
 
     }

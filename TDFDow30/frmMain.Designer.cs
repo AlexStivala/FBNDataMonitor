@@ -81,6 +81,7 @@
             this.label12 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.ReconnectTimer = new System.Windows.Forms.Timer(this.components);
             this.groupBox4 = new System.Windows.Forms.GroupBox();
@@ -151,11 +152,11 @@
             this.groupBox1.Controls.Add(this.IPlabel);
             this.groupBox1.Controls.Add(this.IPTextBox);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox1.Location = new System.Drawing.Point(8, 233);
+            this.groupBox1.Location = new System.Drawing.Point(7, 155);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox1.Size = new System.Drawing.Size(824, 131);
+            this.groupBox1.Size = new System.Drawing.Size(824, 140);
             this.groupBox1.TabIndex = 171;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Login Info";
@@ -163,7 +164,7 @@
             // ServerTextBox
             // 
             this.ServerTextBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ServerTextBox.Location = new System.Drawing.Point(26, 51);
+            this.ServerTextBox.Location = new System.Drawing.Point(26, 56);
             this.ServerTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ServerTextBox.Name = "ServerTextBox";
             this.ServerTextBox.ReadOnly = true;
@@ -174,7 +175,7 @@
             // 
             this.label15.AutoSize = true;
             this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(21, 22);
+            this.label15.Location = new System.Drawing.Point(21, 27);
             this.label15.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(103, 25);
@@ -185,7 +186,7 @@
             // 
             this.groupBox2.Controls.Add(this.pictureBox2);
             this.groupBox2.Controls.Add(this.pictureBox1);
-            this.groupBox2.Location = new System.Drawing.Point(614, 19);
+            this.groupBox2.Location = new System.Drawing.Point(614, 24);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -219,7 +220,7 @@
             // 
             this.lblLogResp.AutoSize = true;
             this.lblLogResp.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblLogResp.Location = new System.Drawing.Point(10, 95);
+            this.lblLogResp.Location = new System.Drawing.Point(10, 100);
             this.lblLogResp.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblLogResp.Name = "lblLogResp";
             this.lblLogResp.Size = new System.Drawing.Size(181, 25);
@@ -312,7 +313,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(332, 19);
+            this.label4.Location = new System.Drawing.Point(332, 24);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(51, 25);
@@ -322,7 +323,7 @@
             // PortTextBox
             // 
             this.PortTextBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.PortTextBox.Location = new System.Drawing.Point(337, 47);
+            this.PortTextBox.Location = new System.Drawing.Point(337, 52);
             this.PortTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.PortTextBox.Name = "PortTextBox";
             this.PortTextBox.ReadOnly = true;
@@ -333,7 +334,7 @@
             // 
             this.IPlabel.AutoSize = true;
             this.IPlabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.IPlabel.Location = new System.Drawing.Point(157, 22);
+            this.IPlabel.Location = new System.Drawing.Point(157, 27);
             this.IPlabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.IPlabel.Name = "IPlabel";
             this.IPlabel.Size = new System.Drawing.Size(118, 25);
@@ -343,7 +344,7 @@
             // IPTextBox
             // 
             this.IPTextBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.IPTextBox.Location = new System.Drawing.Point(154, 50);
+            this.IPTextBox.Location = new System.Drawing.Point(154, 55);
             this.IPTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.IPTextBox.Name = "IPTextBox";
             this.IPTextBox.ReadOnly = true;
@@ -354,7 +355,7 @@
             // 
             this.DataResetLabel.AutoSize = true;
             this.DataResetLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DataResetLabel.Location = new System.Drawing.Point(13, 627);
+            this.DataResetLabel.Location = new System.Drawing.Point(11, 572);
             this.DataResetLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.DataResetLabel.Name = "DataResetLabel";
             this.DataResetLabel.Size = new System.Drawing.Size(128, 25);
@@ -421,7 +422,7 @@
             // 
             this.symbolDataGrid.ColumnHeadersHeight = 34;
             this.symbolDataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.symbolDataGrid.Location = new System.Drawing.Point(295, 755);
+            this.symbolDataGrid.Location = new System.Drawing.Point(232, 610);
             this.symbolDataGrid.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.symbolDataGrid.MultiSelect = false;
             this.symbolDataGrid.Name = "symbolDataGrid";
@@ -591,7 +592,7 @@
             // 
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(20, 146);
+            this.label8.Location = new System.Drawing.Point(20, 159);
             this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(70, 25);
@@ -608,7 +609,7 @@
             // 
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(521, 34);
+            this.label9.Location = new System.Drawing.Point(578, 34);
             this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(70, 25);
@@ -619,7 +620,7 @@
             // 
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(281, 33);
+            this.label10.Location = new System.Drawing.Point(338, 33);
             this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(82, 25);
@@ -630,7 +631,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(281, 69);
+            this.label11.Location = new System.Drawing.Point(338, 69);
             this.label11.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(82, 25);
@@ -641,7 +642,7 @@
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(521, 69);
+            this.label12.Location = new System.Drawing.Point(578, 69);
             this.label12.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(82, 25);
@@ -652,7 +653,7 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(20, 183);
+            this.label13.Location = new System.Drawing.Point(20, 196);
             this.label13.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(82, 25);
@@ -662,6 +663,7 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.label1);
             this.groupBox3.Controls.Add(this.label14);
             this.groupBox3.Controls.Add(this.label11);
             this.groupBox3.Controls.Add(this.label13);
@@ -672,18 +674,29 @@
             this.groupBox3.Controls.Add(this.label9);
             this.groupBox3.Controls.Add(this.label10);
             this.groupBox3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox3.Location = new System.Drawing.Point(9, 381);
+            this.groupBox3.Location = new System.Drawing.Point(7, 308);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(823, 219);
+            this.groupBox3.Size = new System.Drawing.Size(823, 243);
             this.groupBox3.TabIndex = 193;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Stats";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(20, 102);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(70, 25);
+            this.label1.TabIndex = 194;
+            this.label1.Text = "label1";
             // 
             // label14
             // 
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(521, 183);
+            this.label14.Location = new System.Drawing.Point(521, 196);
             this.label14.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(82, 25);
@@ -699,11 +712,11 @@
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.label3);
-            this.groupBox4.Location = new System.Drawing.Point(9, 159);
+            this.groupBox4.Location = new System.Drawing.Point(546, 87);
             this.groupBox4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox4.Size = new System.Drawing.Size(513, 58);
+            this.groupBox4.Size = new System.Drawing.Size(285, 58);
             this.groupBox4.TabIndex = 194;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "DB Table Name";
@@ -712,7 +725,7 @@
             // 
             this.DailyResetLabel.AutoSize = true;
             this.DailyResetLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DailyResetLabel.Location = new System.Drawing.Point(13, 664);
+            this.DailyResetLabel.Location = new System.Drawing.Point(11, 609);
             this.DailyResetLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.DailyResetLabel.Name = "DailyResetLabel";
             this.DailyResetLabel.Size = new System.Drawing.Size(128, 25);
@@ -723,7 +736,7 @@
             // 
             this.ServerResetLabel.AutoSize = true;
             this.ServerResetLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ServerResetLabel.Location = new System.Drawing.Point(13, 702);
+            this.ServerResetLabel.Location = new System.Drawing.Point(11, 647);
             this.ServerResetLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ServerResetLabel.Name = "ServerResetLabel";
             this.ServerResetLabel.Size = new System.Drawing.Size(128, 25);
@@ -736,7 +749,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
-            this.ClientSize = new System.Drawing.Size(878, 840);
+            this.ClientSize = new System.Drawing.Size(845, 697);
             this.Controls.Add(this.ServerResetLabel);
             this.Controls.Add(this.DailyResetLabel);
             this.Controls.Add(this.groupBox4);
@@ -838,6 +851,7 @@
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label DailyResetLabel;
         private System.Windows.Forms.Label ServerResetLabel;
+        private System.Windows.Forms.Label label1;
     }
 }
 
