@@ -62,8 +62,8 @@ namespace TDFDow30.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;Us" +
-            "er ID=sa;Password=Engineer@1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=Tru" +
+            "e;User ID=sa;Password=Engineer@1")]
         public string dbConn {
             get {
                 return ((string)(this["dbConn"]));
@@ -81,7 +81,7 @@ namespace TDFDow30.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Russel3000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("SP1500")]
         public string dbTableName {
             get {
                 return ((string)(this["dbTableName"]));

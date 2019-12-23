@@ -87,6 +87,7 @@ namespace TDFInterface
         public static List<MarketModel.MarketHolidays> GetMarketHolidays()
         {
             string dbConnStr = "Data Source=10.232.77.71;Initial Catalog=X20Financial_TDF;Persist Security Info=True;User ID=X2ouser;Password=C0mpl1cat3d@1";
+            //SqlConnection dbConn = new SqlConnection(dbConnStr);
             SqlConnection dbConn = new SqlConnection(dbConnStr);
             dbConn.Open();
 
@@ -124,7 +125,8 @@ namespace TDFInterface
 
             var sym = GetTickerSymbol(checkSymbol);
             
-            string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            //string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            string dbConnStr = "Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
             SqlConnection dbConn = new SqlConnection(dbConnStr);
             dbConn.Open();
 
@@ -179,7 +181,8 @@ namespace TDFInterface
 
             var sym = GetTickerSymbol(checkSymbol);
 
-            string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            //string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            string dbConnStr = "Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
             SqlConnection dbConn = new SqlConnection(dbConnStr);
             dbConn.Open();
 
@@ -234,7 +237,8 @@ namespace TDFInterface
 
             var sym = GetTickerSymbol(checkSymbol);
 
-            string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            //string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            string dbConnStr = "Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
             SqlConnection dbConn = new SqlConnection(dbConnStr);
             dbConn.Open();
 
@@ -350,7 +354,8 @@ namespace TDFInterface
         }
         public static List<MarketModel.BusinessPulsePages> GetBusinessPulsePages(string tableName)
         {
-            string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            //string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            string dbConnStr = "Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
             SqlConnection dbConn = new SqlConnection(dbConnStr);
             dbConn.Open();
 
@@ -388,7 +393,8 @@ namespace TDFInterface
         }
         public static List<MarketModel.MarketPulsePages> GetMarketPulsePages(string tableName)
         {
-            string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            //string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            string dbConnStr = "Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
             SqlConnection dbConn = new SqlConnection(dbConnStr);
             dbConn.Open();
 
@@ -428,7 +434,8 @@ namespace TDFInterface
 
         public static List<MarketModel.marketSort> GetSP500WinnersLosers(bool winners)
         {
-            string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            //string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+            string dbConnStr = "Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
 
             SqlConnection dbConn = new SqlConnection(dbConnStr);
             dbConn.Open();
@@ -477,7 +484,8 @@ namespace TDFInterface
 
             try
             {
-                string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+                //string dbConnStr = "Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
+                string dbConnStr = "Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1";
 
                 SqlConnection dbConn = new SqlConnection(dbConnStr);
                 dbConn.Open();
@@ -523,6 +531,8 @@ namespace TDFInterface
             }
 
         }
+
+
 
     }
 }

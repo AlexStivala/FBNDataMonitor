@@ -21,7 +21,8 @@ using System.Runtime.InteropServices;
 
 namespace TDFDow30
 {
-    
+    public delegate void ConnectLite(bool on);
+
     public partial class frmMain : Form, IAppender
     {
         #region Globals
@@ -40,6 +41,7 @@ namespace TDFDow30
         public int nSkip = 0;
         public static DateTime lastDataReceived = DateTime.Now;
 
+        public ConnectLite connectLite;
 
         itf_Header stdHeadr = new itf_Header()
         {
@@ -121,10 +123,11 @@ namespace TDFDow30
         public bool updateZipperFile = false;
         public bool updateChartData = false;
         public string spUpdateChart = "";
-        public bool dataReset = false;
-        public byte mt = 0;
-        public ushort msgSize = 0;
-        public int dataLeft = 0;
+        public static bool dataReset = false;
+        public static byte mt = 0;
+        public static ushort msgSize = 0;
+        public static int dataLeft = 0;
+        public static bool errFlag = false;
 
         public TimeSpan marketOpen = new TimeSpan(9, 29, 58); //9:30 am
         public TimeSpan marketClose = new TimeSpan(16, 10, 0); //4:06 pm  somtimes data is updated a bit after market close
@@ -149,6 +152,10 @@ namespace TDFDow30
         public DateTime nextServerReset;
         public DateTime nextDailyReset;
         int ServerID = 0;
+        public static DateTime lastEmail = DateTime.Now.AddMinutes(-15);
+
+        public static fin_Data fd = new fin_Data();
+
 
 
 
@@ -391,40 +398,6 @@ namespace TDFDow30
                 TDFGlobals.starredFields.Add("errMsg"); // 15
                 TDFGlobals.starredFields.Add("issuerName"); // 16
 
-
-                /*
-                TDFGlobals.starredFields.Add("annHi"); // 6
-                TDFGlobals.starredFields.Add("annLo");// 7
-                TDFGlobals.starredFields.Add("peRatio"); // 9
-                TDFGlobals.starredFields.Add("eps"); // 10
-                TDFGlobals.starredFields.Add("ask"); // 11
-                TDFGlobals.starredFields.Add("bid"); // 12
-                TDFGlobals.starredFields.Add("lastActivity"); // 13
-                TDFGlobals.starredFields.Add("lastActivityNetChg"); // 14
-                TDFGlobals.starredFields.Add("lastActivityPcntChg"); // 15
-                TDFGlobals.starredFields.Add("lastActivityVol"); // 15
-                TDFGlobals.starredFields.Add("divAnn"); // 16
-                TDFGlobals.starredFields.Add("intRate"); // 17
-                TDFGlobals.starredFields.Add("bidYld"); // 18
-                TDFGlobals.starredFields.Add("bidNetChg"); // 19
-                TDFGlobals.starredFields.Add("askYld"); // 20
-                TDFGlobals.starredFields.Add("bidYldNetChg"); // 21
-                TDFGlobals.starredFields.Add("yrClsPrc"); // 22
-                TDFGlobals.starredFields.Add("monthClsPrc"); //23
-                TDFGlobals.starredFields.Add("mktCap"); //24
-                TDFGlobals.starredFields.Add("yld"); // 26
-                TDFGlobals.starredFields.Add("prcFmtCode"); // 27
-                TDFGlobals.starredFields.Add("companyShrsOutstanding"); // 28
-                TDFGlobals.starredFields.Add("sectyType"); // 29
-                TDFGlobals.starredFields.Add("symbol"); // 30
-                TDFGlobals.starredFields.Add("issuerName"); // 14
-*/
-
-                // Log application start
-                log.Debug("\r\n\r\n*********** Starting TDFRussell3000 **********\r\n");
-
-
-
                 //XMLDataUpdated += new EventHandler<XMLUpdateEventArgs>(DisplayXMLData);
                 //SymbolDataUpdated += new EventHandler<SymbolUpdateEventArgs>(SymbolDataUpdated);
                 //ChartDataUpdated += new EventHandler<ChartLiveUpdateEventArgs>(ChartDataUpdated);
@@ -439,15 +412,16 @@ namespace TDFDow30
 
                 // Set version number
                 var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                this.Text = String.Format("TDF Dow30 Application  Version {0}", version);
+                this.Text = String.Format("Data Monitor SP1500 Application  Version {0}", version);
 
+                // Log application start
+                log.Debug($"\r\n\r\n*********** Starting Data Monitor SP1500 v{version} **********\r\n");
 
 
                 TDFProcessingFunctions TDFproc = new TDFProcessingFunctions();
                 TDFproc.sendBuf += new SendBuf(TRSendCommand);
                 chartCnt = (Int16)(chartInterval - 3);
                 ConnectToTDF();
-
 
                 TODTimer.Enabled = true;
 
@@ -498,7 +472,12 @@ namespace TDFDow30
                     System.Threading.Thread.Sleep(10);
                     if (TRConnected == true)
                     {
-                        pictureBox2.Visible = true;
+                        if (this.InvokeRequired && connectLite == null)
+                            this.Invoke(new ConnectLite(connectLED), false);
+                        else
+                        {
+                            pictureBox2.Visible = true;
+                        }
                         done = true;
                     }
                     n++;
@@ -538,7 +517,7 @@ namespace TDFDow30
                     System.Threading.Thread.Sleep(10);
                     if (logResp.Length > 5)
                     {
-                        lblLogResp.Text = logResp;
+                        //lblLogResp.Text = logResp;
                         done = true;
                     }
                     n++;
@@ -556,19 +535,9 @@ namespace TDFDow30
             }
 
 
-            /*
-            int n = 0;
-            while (loggedIn == false && n < 50)
-            {
-                n++;
-                System.Threading.Thread.Sleep(100);
-
-            }
-            */
-
             TDFProcessingFunctions TDFproc = new TDFProcessingFunctions();
             TDFproc.sendBuf += new SendBuf(TRSendCommand);
-            lblLogResp.Text = logResp;
+            //lblLogResp.Text = logResp;
             TDFproc.GetCataloger();
             //label7.Text = "Num Catalogs: " + numCat.ToString();
             
@@ -593,18 +562,16 @@ namespace TDFDow30
 
         public void GetSymbols()
         {
+            log.Debug("Initializing symbols...");
             // get data from db table to get symbol list
-            string connection = $"SELECT * FROM {dbTableName}";
+            string cmd = $"SELECT * FROM {dbTableName}";
             //Dow30Data = Dow30Database.Dow30DB.GetSymbolDataCollection(connection, dbConn);
             Russel3000Data.Clear();
             R3000UpdateData.Clear();
-            Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(connection, dbConn);
+            Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, dbConn);
 
             foreach (Dow30Database.Dow30DB.Russel3000symbolData R3000 in Russel3000Data)
                 R3000UpdateData.Add(R3000);
-
-            symbolDataGrid.DataSource = Russel3000Data;
-            //symbolDataGrid.DataSource = R3000UpdateData;
 
             System.Threading.Thread.Sleep(100);
             
@@ -616,126 +583,94 @@ namespace TDFDow30
             int tot = 0;
             int totSymbols = Russel3000Data.Count;
             int n = 0;
+
             foreach (Dow30Database.Dow30DB.Russel3000symbolData sd in Russel3000Data)
             {
-                TDFGlobals.Dow30symbols.Add(sd.Symbol);
-                if (first == false)
-                {
-                    symListStr += ", " + sd.Symbol;
-                }
-                else
-                {
-                    symListStr = sd.Symbol;
-                    first = false;
-                }
-
-                nSymbols++;
-                tot++;
-                if (nSymbols == 50 || tot == totSymbols)
-                {
-                    symbolListStr.Add(symListStr);
-                    nSymbols = 0;
-                    first = true;
-                }
-
                 symbolData sd1 = new symbolData();
-                if (dynamic)
-                    sd1.queryType = (int)QueryTypes.Dynamic_Quotes;
+                sd1.company_Name = MarketFunctions.GetCompanyName(sd.Symbol);
+                if (sd1.company_Name != "")
+                {
+
+                    if (dynamic)
+                        sd1.queryType = (int)QueryTypes.Dynamic_Quotes;
+                    else
+                        sd1.queryType = (int)QueryTypes.Portfolio_Mgr;
+
+                    if (first == false)
+                    {
+                        symListStr += ", " + sd.Symbol;
+                    }
+                    else
+                    {
+                        symListStr = sd.Symbol;
+                        first = false;
+                    }
+
+                    nSymbols++;
+                    tot++;
+                    if (nSymbols == 50 || tot == totSymbols)
+                    {
+                        symbolListStr.Add(symListStr);
+                        nSymbols = 0;
+                        first = true;
+                    }
+
+
+                    sd1.queryStr = "";
+                    sd1.symbol = sd.Symbol;
+                    //sd1.company_Name = sd.Name.ToUpper();
+                    sd1.seqId = 5;
+                    sd1.updated = sd.Updated;
+                    sd1.trdPrc = sd.Last;
+                    sd1.netChg = sd.Change;
+                    sd1.pcntChg = sd.PercentChange;
+                    sd1.opn = sd.Open;
+                    sd1.hi = sd.High;
+                    sd1.lo = sd.Low;
+                    sd1.lastActivity = sd.lastActivity;
+                    sd1.lastActivityNetChg = sd.lastActivityNetChg;
+                    sd1.lastActivityPcntChg = sd.lastActivityPcntChg;
+                    sd1.lastActivityVol = sd.lastActivityVol;
+                    sd1.annHi = sd.annHi;
+                    sd1.annLo = sd.annLo;
+
+                    //TDFGlobals.Dow30symbols.Add(sd.Symbol);
+                    TDFGlobals.symbols.Add(sd1);
+                    n++;
+                    UpdateDBCompanyName(sd1);
+                }
                 else
-                    sd1.queryType = (int)QueryTypes.Portfolio_Mgr;
-
-                sd1.queryStr = "";
-                sd1.symbol = sd.Symbol;
-                sd1.company_Name = sd.Name.ToUpper();
-                sd1.seqId = 5;
-                sd1.updated = sd.Updated;
-                sd1.trdPrc = sd.Last;
-                sd1.netChg = sd.Change;
-                sd1.pcntChg = sd.PercentChange;
-                sd1.opn = sd.Open;
-                sd1.hi = sd.High;
-                sd1.lo = sd.Low;
-                sd1.lastActivity = sd.lastActivity;
-                sd1.lastActivityNetChg = sd.lastActivityNetChg;
-                sd1.lastActivityPcntChg = sd.lastActivityPcntChg;
-                sd1.lastActivityVol = sd.lastActivityVol;
-                sd1.annHi = sd.annHi;
-                sd1.annLo = sd.annLo;
-
-                TDFGlobals.symbols.Add(sd1);
-
-
-                DataGridViewRow row = symbolDataGrid.Rows[n];
-
-                if (Convert.ToSingle(row.Cells[3].Value) < 0)
                 {
-                    row.DefaultCellStyle.BackColor = Color.Red;
-                    row.DefaultCellStyle.ForeColor = Color.Black;
+                    string deleteCmd = $"DELETE FROM SP1500 WHERE Symbol = '{sd.Symbol}'";
+                    int nd = Dow30Database.Dow30DB.SQLExec(deleteCmd, dbConn);
+                    if (nd > 0)
+                        log.Info($" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Symbol {sd.Symbol} deleted from SP1500 database");
+                    string msg = $" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Symbol {sd.Symbol} deleted from SP1500 database";
+                    SendEmail(msg);
                 }
-                else if (Convert.ToSingle(row.Cells[3].Value) > 0)
-                {
-                    row.DefaultCellStyle.BackColor = Color.Green;
-                    row.DefaultCellStyle.ForeColor = Color.White;
-                }
-                else
-                {
-                    row.DefaultCellStyle.BackColor = Color.White;
-                    row.DefaultCellStyle.ForeColor = Color.Black;
-                }
-                
 
-                n++;
-            }
-            //label1.Text = symbolListStr;
-
-            
-            
-            symbolDataGrid.Columns[0].Width = 50;
-            symbolDataGrid.Columns[1].Width = 200;
-            symbolDataGrid.Columns[2].Width = 70;
-            symbolDataGrid.Columns[3].Width = 100;
-            symbolDataGrid.Columns[4].Width = 100;
-            symbolDataGrid.Columns[5].Width = 70;
-            symbolDataGrid.Columns[6].Width = 70;
-            symbolDataGrid.Columns[7].Width = 50;
-            symbolDataGrid.Columns[8].Width = 70;
-            symbolDataGrid.Columns[9].Width = 120;
-            symbolDataGrid.Columns[10].Width = 50;
-            symbolDataGrid.Columns[11].Width = 65;
-            symbolDataGrid.Columns[12].Width = 50;
-            symbolDataGrid.Columns[13].Width = 50;
-            symbolDataGrid.Columns[14].Width = 80;
-            symbolDataGrid.Columns[15].Width = 95;
-            symbolDataGrid.Columns[16].Width = 100;
-            symbolDataGrid.Columns[17].Width = 80;
-            symbolDataGrid.Columns[18].Width = 70;
-            symbolDataGrid.Columns[19].Width = 70;
-            symbolDataGrid.Columns[20].Width = 50;
-            symbolDataGrid.Columns[21].Width = 50;
-
-            
-
-            // Double buffering can make DGV slow in remote desktop
-            if (!System.Windows.Forms.SystemInformation.TerminalServerSession)
-            {
-                Type dgvType = symbolDataGrid.GetType();
-                PropertyInfo pi = dgvType.GetProperty("DoubleBuffered",
-                  BindingFlags.Instance | BindingFlags.NonPublic);
-                //pi.SetValue(symbolDataGrid, value, null);
-                pi.SetValue(symbolDataGrid, DoubleBuffered, null);
             }
 
-            SuspendView(symbolDataGrid);
+            // re do after updating names in DB
 
-            //ClearHiLo();
+            Russel3000Data.Clear();
+            R3000UpdateData.Clear();
+            Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, dbConn);
+
+            foreach (Dow30Database.Dow30DB.Russel3000symbolData R3000 in Russel3000Data)
+                R3000UpdateData.Add(R3000);
+
+
             if (dynamic)
             {
+                log.Debug("Issuing dynamic subscription queries...");
                 foreach (Dow30Database.Dow30DB.Russel3000symbolData sd in Russel3000Data)
                 {
                     ui++;
                     IssueDynamicSubscriptionQuery(sd.Symbol, ui);
                     Thread.Sleep(5);
                 }
+                log.Debug("Dynamic subscription queries complete ...");
             }
             // start data collection
             timer1.Enabled = true;
@@ -822,6 +757,7 @@ namespace TDFDow30
                                 TRdata.RemoveRange(0, len);
                                 dataLeft = TRdata.Count;
                                 dynamicFlag = true;
+                                WatchdogTimer.Enabled = false;
                             }
                             catch (Exception ex)
                             {
@@ -1014,8 +950,6 @@ namespace TDFDow30
                             else
                             {
                                 log.Error("--- Sync byte not found!");
-
-
                                 /*
                                 TRdata.Clear();
                                 dataLeft = TRdata.Count;
@@ -1023,15 +957,12 @@ namespace TDFDow30
                                 log.Debug("--- Receive buffer cleared!");
                                 */
 
-
-
                                 int n = 0;
                                 while (TRdata[0] != 2 && TRdata.Count > 0)
                                 {
                                     TRdata.RemoveRange(0, 1);
                                     n++;
                                 }
-
                                 log.Debug($"--- {n} Bytes removed!");
 
 
@@ -1039,20 +970,6 @@ namespace TDFDow30
                                 //TRmessage = itfHeaderAccess.ParseItfMessage(TRdata.ToArray());
                                 //return;
                             }
-                            /*
-                            if (TRmessage.itf_Header.msgType == TDFconstants.KEEP_ALIVE_REQUEST)
-                            {
-                                cmdResp = System.Text.Encoding.Default.GetString(TRmessage.Message.ToArray());
-                                //TDFProcessingFunctions TDFproc = new TDFProcessingFunctions();
-                                TDFproc.ProcessKeepAliveRequest(TRmessage);
-                                int TRdataLen = TRdata.Count;
-                                if (TRmessage.itf_Header.msgSize + 1 > TRdataLen)
-                                    TRdata.RemoveRange(0, TRdataLen);
-                                else
-                                    TRdata.RemoveRange(0, TRmessage.itf_Header.msgSize + 1);
-                                dataLeft = TRdata.Count;
-                            }
-                            */
                         }
                     }
                     else
@@ -1198,7 +1115,6 @@ namespace TDFDow30
                     GetDow30Data();
                     Thread.Sleep(50);
 
-
                     if (TDFGlobals.financialResults.Count > 0)
                     {
                         for (int i = 0; i < TDFGlobals.financialResults.Count; i++)
@@ -1222,68 +1138,18 @@ namespace TDFDow30
 
                         string connection = $"SELECT * FROM {dbTableName}";
                         Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(connection, dbConn);
-                        symbolDataGrid.DataSource = Russel3000Data;
-                        symbolDataGrid.ClearSelection();
-
-                        foreach (DataGridViewRow row in symbolDataGrid.Rows)
-                        {
-                            if (Convert.ToSingle(row.Cells[3].Value) < 0)
-                            {
-                                row.DefaultCellStyle.BackColor = Color.Red;
-                                row.DefaultCellStyle.ForeColor = Color.Black;
-                            }
-                            else if (Convert.ToSingle(row.Cells[3].Value) > 0)
-                            {
-                                row.DefaultCellStyle.BackColor = Color.Green;
-                                row.DefaultCellStyle.ForeColor = Color.White;
-                            }
-                            else
-                            {
-                                row.DefaultCellStyle.BackColor = Color.White;
-                                row.DefaultCellStyle.ForeColor = Color.Black;
-                            }
-
-                        }
-                        if (updateZipperFile)
-                            UpdateZipperDataFile();
                         //label1.Text = $"Elapsed: {ts.TotalMilliseconds.ToString()} msec";
                     }
                 }
                 else
                 {
-                    /*
-                    stopWatch.Start();
-                    // Get the elapsed time as a TimeSpan value.
-
-                    if (TDFGlobals.financialResults.Count > 0 )
-                        UpdateDynamicSymbols();
-
-                    DataTable dt = new DataTable();
-                    dt = ListToDataTable<Dow30Database.Dow30DB.Russel3000symbolData>(R3000UpdateData);
-
-                    Task.Run(() => UpdateRussel3000Table(dt));
-                    R3000UpdateData.Clear();
-
-                    stopWatch.Stop();
-                    ts = stopWatch.Elapsed;
-                    stopWatch.Reset();
-                    if (ts > tsMax)
-                        tsMax = ts;
-                        
-
-                    label8.Text = $"Processing Time: {ts.TotalMilliseconds.ToString()} msec";
-                    label13.Text = $"Processing Max: {tsMax.TotalMilliseconds.ToString()} msec";
-                    */
-
                     if (!updateFlag)
                         Task.Run(() => UpdateAll());
                     else
                     {
                         nSkip++;
                     }
-                    //UpdateAll();
-
-
+                    
                     label8.Text = $"Processing Time: {ts.TotalMilliseconds.ToString()} msec";
                     label13.Text = $"Processing Max: {tsMax.TotalMilliseconds.ToString()} msec";
                     label14.Text = $"Number of skips: {nSkip}";
@@ -1314,7 +1180,6 @@ namespace TDFDow30
 
 
                     }
-                    //label2.Text = $"Updated: {nSymGood} - Err: {nSymBad}";
                     label2.Text = $"Total Symbols: {nSymGood}";
                     label9.Text = $"Bad Symbols: {nSymBad}";
                     nTick++;
@@ -1338,7 +1203,8 @@ namespace TDFDow30
             DataTable dt = new DataTable();
             dt = ListToDataTable<Dow30Database.Dow30DB.Russel3000symbolData>(R3000UpdateData);
 
-            Task.Run(() => UpdateRussel3000Table(dt));
+            //Task.Run(() => UpdateRussel3000Table(dt));
+            Task.Run(() => UpdateSP1500Table(dt));
 
             stopWatch.Stop();
             ts = stopWatch.Elapsed;
@@ -1439,10 +1305,8 @@ namespace TDFDow30
 
         public void UpdateDynamicSymbols()
         {
-            //SuspendView(symbolDataGrid);
             try
             {
-
                 string sym = "";
                 string oldSym = "";
                 int symbolIndex = -1;
@@ -1451,17 +1315,16 @@ namespace TDFDow30
                 fin_Data fd = new fin_Data();
                 List<int> updateIndx = new List<int>();
 
-
                 if (n > 0)
                 {
                     for (int i = 0; i < n; i++)
                     {
+                        fd = TDFGlobals.financialResults[i];
                         sym = TDFGlobals.financialResults[i].symbol;
                         if (sym != oldSym && sym != null)
                         {
                             // new symbol
                             // Update previous symbol except first one or last symbol was an error
-
                             if (i > 0)
                             {
                                 // update previous symbol
@@ -1469,12 +1332,7 @@ namespace TDFDow30
                                     UpdateSymbol(symbolIndex);
                                 else
                                 {
-                                    //fin_Data fd = new fin_Data();
-                                    //fd = TDFGlobals.financialResults[i];
-                                    //fixSymbols(fd);
-
                                     log.Error($"Previous symbol not updated.  Symbol : {oldSym}");
-                                    
                                 }
                             }
 
@@ -1487,9 +1345,8 @@ namespace TDFDow30
                             else
                             {
                                 //fin_Data fd = new fin_Data();
-                                fd = TDFGlobals.financialResults[i];
                                 if (sym.Length > 0)
-                                    fixSymbols(fd);
+                                    fixSymbols(TDFGlobals.financialResults[i]);
                                 log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}");
 
                             }
@@ -1500,14 +1357,12 @@ namespace TDFDow30
                         if (symbolIndex >= 0)
                         {
                             TDFProcessingFunctions.SetSymbolData(TDFGlobals.financialResults, i, symbolIndex);
-
                         }
                         else if(sym.Length > 0)
                         {
-                            fin_Data fd1 = new fin_Data();
-                            log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd1.fieldName}");
-                            fd1 = TDFGlobals.financialResults[i];
-                            fixSymbols(fd1);
+                            log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {TDFGlobals.financialResults[i].fieldName}");
+                            //fd = TDFGlobals.financialResults[i];
+                            fixSymbols(TDFGlobals.financialResults[i]);
                             
                         }
                         if (TDFGlobals.financialResults[i].fieldName == "issuerName")
@@ -1522,7 +1377,6 @@ namespace TDFDow30
                             }
                         }
 
-
                     }
                 }
 
@@ -1530,15 +1384,12 @@ namespace TDFDow30
                 if (symbolIndex >= 0)
                 {
                     UpdateSymbol(symbolIndex);
-                    
                 }
                 else
                 {
-                    //fin_Data fd = new fin_Data();
-                    //fd = TDFGlobals.financialResults[i];
-                    if (sym.Length > 0)
-                        fixSymbols(fd);
                     log.Error($"symbolIndex < 0  Symbol : {sym}");
+                    if (sym.Length > 0)
+                        fixSymbols(TDFGlobals.financialResults[n - 1]);
                 }
 
                 if (updateNewSymbol)
@@ -1546,24 +1397,32 @@ namespace TDFDow30
                         UpdateDBNewSymbol(TDFGlobals.symbols[updateIndx[i]]);
 
                 TDFGlobals.financialResults.RemoveRange(0, n);
-
             }
             catch (Exception ex)
             {
-                log.Error($"UpdateDynamicSymbols: {ex}");
+                bool emailSent = false;
+                string msg = $"UpdateDynamicSymbols: {ex.Message}    {ex.Source}    {ex.StackTrace}";
+                if (DateTime.Now > lastEmail.AddMinutes(15))
+                {
+                    SendEmail(msg);
+                    emailSent = true;
+                }
+                log.Error($"UpdateDynamicSymbols: {ex.Message}    {ex.Source}    {ex.StackTrace}");
                 TRdata.Clear();
                 
                 log.Debug($"Starting error reset procedure.....");
                 resetting = true;
-                timer1.Enabled = false;
+                //timer1.Enabled = false;
                 if (dynamic)
                 {
                     UnsubscribeAll();
                     log.Debug("Unsubscribe complete.");
                 }
                 DisconnectFromTDF();
+                Thread.Sleep(1000);
                 TDFGlobals.symbols.Clear();
                 TDFGlobals.financialResults.Clear();
+                dataLeft = 0;
                 TRdata.Clear();
                 log.Debug($"Reconnecting now .....");
 
@@ -1580,17 +1439,20 @@ namespace TDFDow30
                 else
                 {
                     resetFlag = true;
-                    string msg = "[" + DateTime.Now + "] TDFDow30 reset error. Failed to reconnect after timed disconnect.";
-                    SendEmail(msg);
-                    log.Debug("TDFDow30 reset error. Failed to reconnect after timed disconnect.");
+                    msg = "[" + DateTime.Now + "] DataMonitor reset error. Failed to reconnect after timed disconnect.";
+                    if (DateTime.Now > lastEmail.AddMinutes(15))
+                    {
+                        SendEmail(msg);
+                        emailSent = true;
+                    }
+                    log.Debug("DataMonitor reset error. Failed to reconnect after timed disconnect.");
                 }
+                if (emailSent)
+                    lastEmail = DateTime.Now;
+                timer1.Enabled = true;
+                WatchdogTimer.Enabled = true;
+            }
 
-            }
-            finally
-            {
-                //ResumeView(symbolDataGrid);
-            }
-            
         }
 
         public  void UpdateSymbol(int symIndx)
@@ -1655,15 +1517,13 @@ namespace TDFDow30
                         if (indx == -1)
                         {
                             R3000UpdateData.Add(R3000);
-                            row = symbolDataGrid.Rows[R3000UpdateData.Count - 1]; 
+                            //row = symbolDataGrid.Rows[R3000UpdateData.Count - 1]; 
 
                         }
                         else
                         {
                             //R3000UpdateData.RemoveAt(indx);
                             //R3000UpdateData.Add(R3000);
-
-
                             nDup++;
                             R3000UpdateData[indx].Last = R3000.Last;
                             R3000UpdateData[indx].Change = R3000.Change;
@@ -1674,64 +1534,16 @@ namespace TDFDow30
                             R3000UpdateData[indx].Volume = R3000.Volume;
                             R3000UpdateData[indx].Updated = DateTime.Now;
 
-
                             R3000UpdateData[indx].lastActivity = R3000.lastActivity;
                             R3000UpdateData[indx].lastActivityNetChg = R3000.lastActivityNetChg;
                             R3000UpdateData[indx].lastActivityPcntChg = R3000.lastActivityPcntChg;
                             R3000UpdateData[indx].lastActivityVol = R3000.lastActivityVol;
                             R3000UpdateData[indx].annHi = R3000.annHi;
                             R3000UpdateData[indx].annLo = R3000.annLo;
-                            row = symbolDataGrid.Rows[indx];
-
                         }
-
                         //UpdateDB(TDFGlobals.symbols[symIndx]);
 
-
-                        //DataGridViewRow row = new DataGridViewRow();
-
-                        //row = symbolDataGrid.Rows[symIndx];
                         Russel3000Data[symIndx] = R3000; 
-
-                        /*
-                        row.Cells[2].Value = R3000.Last;
-                        row.Cells[3].Value = R3000.Change;
-                        row.Cells[4].Value = R3000.PercentChange;
-                        row.Cells[5].Value = R3000.Open;
-                        row.Cells[6].Value = R3000.High;
-                        row.Cells[7].Value = R3000.Low;
-                        row.Cells[8].Value = R3000.Volume;
-                        row.Cells[9].Value = R3000.Updated;
-
-
-                        row.Cells[14].Value = R3000.lastActivity;
-                        row.Cells[15].Value = R3000.lastActivityNetChg;
-                        row.Cells[16].Value = R3000.lastActivityPcntChg;
-                        row.Cells[17].Value = R3000.lastActivityVol;
-
-                        row.Cells[18].Value = R3000.annHi;
-                        row.Cells[19].Value = R3000.annLo;
-                        row.Cells[20].Value = R3000.NewHi;
-                        row.Cells[21].Value = R3000.NewLo;
-                        */
-
-                        //if (Convert.ToSingle(row.Cells[3].Value) < 0)
-                        if (Convert.ToSingle(R3000.Change) < 0)
-                        {
-                            row.DefaultCellStyle.BackColor = Color.Red;
-                            row.DefaultCellStyle.ForeColor = Color.Black;
-                        }
-                        else if (Convert.ToSingle(row.Cells[3].Value) > 0)
-                        {
-                            row.DefaultCellStyle.BackColor = Color.Green;
-                            row.DefaultCellStyle.ForeColor = Color.White;
-                        }
-                        else
-                        {
-                            row.DefaultCellStyle.BackColor = Color.White;
-                            row.DefaultCellStyle.ForeColor = Color.Black;
-                        }
-
                         lastDataReceived = DateTime.Now;
                         nSymGood++;
                     }
@@ -1751,9 +1563,6 @@ namespace TDFDow30
         public void UpdateRussel3000Table(DataTable dt)
         {
             string spName = "sp_UpdateTableRussel3000";
-
-
-
             string cmdStr = $"{spName} ";
 
             //Save out the top-level metadata
@@ -1811,10 +1620,70 @@ namespace TDFDow30
 
         }
 
+        public void UpdateSP1500Table(DataTable dt)
+        {
+            string spName = "sp_UpdateTableSP1500";
+            string cmdStr = $"{spName} ";
+
+            //Save out the top-level metadata
+            try
+            {
+                // Instantiate the connection
+                using (SqlConnection connection = new SqlConnection(dbConn))
+                {
+                    connection.Open();
+                    using (SqlDataAdapter sqlDataAdapter = new SqlDataAdapter())
+                    {
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            SqlTransaction transaction;
+                            // Start a local transaction.
+                            transaction = connection.BeginTransaction("Update SP1500 Table");
+
+                            // Must assign both transaction object and connection 
+                            // to Command object for a pending local transaction
+                            cmd.Connection = connection;
+                            cmd.Transaction = transaction;
+
+                            try
+                            {
+                                //Specify base command
+                                cmd.CommandText = cmdStr;
+
+                                cmd.Parameters.Add("@tblSP1500", SqlDbType.Structured).Value = dt;
+
+                                sqlDataAdapter.SelectCommand = cmd;
+                                sqlDataAdapter.SelectCommand.Connection = connection;
+                                sqlDataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+
+                                // Execute stored proc 
+                                sqlDataAdapter.SelectCommand.ExecuteNonQuery();
+
+                                //Attempt to commit the transaction
+                                transaction.Commit();
+                            }
+                            catch (Exception ex)
+                            {
+                                transaction.Rollback();
+                                log.Error("UpdateSP1500Table: " + ex.Message);
+
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("UpdateSP1500Table: " + ex.Message);
+            }
+
+        }
 
         public void UpdateDB(symbolData sd)
         {
-            spName = "sp_Insert_Russel3000_Data";
+            //spName = "sp_Insert_Russel3000_Data";
+            spName = "sp_Insert_SP1500_Data";
 
             string cmdStr = $"{spName} @Symbol, @Name, @Last, @Change, @PercentChange, @Open, @High, @Low, @Volume, @Updated, @Dow, @Nasdaq100, @SP, @Sector";
             cmdStr += ", @lastActivity, @lastActivityNetChg, @lastActivityPcntChg, @lastActivityVol, @annHi, @annLo, @NewHi, @NewLo";
@@ -1865,7 +1734,7 @@ namespace TDFDow30
                                 cmd.Parameters.Add("@lastActivityPcntChg", SqlDbType.Float).Value = sd.lastActivityPcntChg;
                                 cmd.Parameters.Add("@lastActivityVol", SqlDbType.BigInt).Value = sd.lastActivityVol;
                                 cmd.Parameters.Add("@annHi", SqlDbType.Float).Value = sd.annHi;
-                                cmd.Parameters.Add("@annLo", SqlDbType.BigInt).Value = sd.annLo;
+                                cmd.Parameters.Add("@annLo", SqlDbType.Float).Value = sd.annLo;
 
                                 cmd.Parameters.Add("@NewHi", SqlDbType.Bit).Value = false;
                                 cmd.Parameters.Add("@NewLo", SqlDbType.Bit).Value = false;
@@ -1905,7 +1774,76 @@ namespace TDFDow30
             }
             
         }
-        
+        public void UpdateDBCompanyName(symbolData sd)
+        {
+            spName = "sp_UpdateCompanyNameSP1500";
+
+            string cmdStr = $"{spName} @Search_Symbol, @Company_Name_Short";
+            
+            //Save out the top-level metadata
+            try
+            {
+                // Instantiate the connection
+                using (SqlConnection connection = new SqlConnection(dbConn))
+                {
+                    connection.Open();
+                    using (SqlDataAdapter sqlDataAdapter = new SqlDataAdapter())
+                    {
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            SqlTransaction transaction;
+                            // Start a local transaction.
+                            transaction = connection.BeginTransaction("Update SP1500 CompanyName");
+
+                            // Must assign both transaction object and connection 
+                            // to Command object for a pending local transaction
+                            cmd.Connection = connection;
+                            cmd.Transaction = transaction;
+
+                            try
+                            {
+                                //Specify base command
+                                cmd.CommandText = cmdStr;
+
+                                cmd.Parameters.Add("@Search_Symbol", SqlDbType.Text).Value = sd.symbol;
+                                cmd.Parameters.Add("@Company_Name_Short", SqlDbType.Text).Value = sd.company_Name;
+                                
+                                sqlDataAdapter.SelectCommand = cmd;
+                                sqlDataAdapter.SelectCommand.Connection = connection;
+                                sqlDataAdapter.SelectCommand.CommandType = CommandType.Text;
+
+                                // Execute stored proc to store top-level metadata
+                                sqlDataAdapter.SelectCommand.ExecuteNonQuery();
+
+                                //Attempt to commit the transaction
+                                transaction.Commit();
+
+                                //log.Info($"Stored proc: {cmdStr}");
+                                //for (int i = 0; i < cmd.Parameters.Count; i++)
+                                    //log.Info($"cmd params {i}. {cmd.Parameters[i].ParameterName} : {cmd.Parameters[i].Value}");
+
+                                //log.Info($"Symbol {sd.symbol} has beed added to the DB");
+
+                            }
+                            catch (Exception ex)
+                            {
+                                transaction.Rollback();
+                                log.Error("UpdateData- SQL Command Exception occurred: " + ex.Message);
+
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("UpdateData- SQL Connection Exception occurred: " + ex.Message);
+
+            }
+
+        }
+
         public void UpdateChartData(X20ChartData cd)
         {
             //string cmdStr = "sp_Insert_ChartData @Updated, @Dow, @NASDAQ, @SP";
@@ -1989,14 +1927,14 @@ namespace TDFDow30
         public void SendEmail(string msg)
         {
             //MailMessage mail = new MailMessage("TDFDow30App@foxnews.com", "242 -GFX Engineering <GFXEngineering@FOXNEWS.COM>");
-            MailMessage mail = new MailMessage("TDFRussel3000App@foxnews.com", "alex.stivala@foxnews.com");
+            MailMessage mail = new MailMessage("DataMonitor@foxnews.com", "alex.stivala@foxnews.com");
 
             SmtpClient mailClient = new SmtpClient();
             mailClient.Port = 25;
             mailClient.DeliveryMethod = SmtpDeliveryMethod.Network;
             mailClient.UseDefaultCredentials = true;
             mailClient.Host = "10.232.16.121";
-            mail.Subject = "TDFRussel3000 Alert";
+            mail.Subject = "DataMonitor Alert";
             //mail.Subject = "TDFDow30 Test Email";
             //mail.Body = "[" + DateTime.Now + "] " + Environment.NewLine + "The data monitor application has encountered a error" + Environment.NewLine + e.ToString();
             //mail.Body = "[" + DateTime.Now + "] " + Environment.NewLine + "This is a test message!" + Environment.NewLine;
@@ -2016,7 +1954,7 @@ namespace TDFDow30
                 log.Debug("Unsubscribe complete");
             }
             Logoff();
-            Thread.Sleep(100);
+            Thread.Sleep(1000);
             log.Debug("*****  TDFRussell3000 Closed *****");
         }
         private void Logoff()
@@ -2033,10 +1971,24 @@ namespace TDFDow30
             Logoff();
             Thread.Sleep(200);
             TRClientSocket.Disconnect();
-            pictureBox2.Visible = false;
+            if (this.InvokeRequired && connectLite == null)
+                this.Invoke(new ConnectLite(connectLED), false);
+            else
+            {
+                pictureBox2.Visible = false;
+            }
             Thread.Sleep(200);
             
         }
+
+        public void connectLED(bool on)
+        {
+            if (on)
+                pictureBox2.Visible = true;
+            else
+                pictureBox2.Visible = false;
+        }
+
 
         private void TODTimer_Tick(object sender, EventArgs e)
         {
@@ -2263,9 +2215,9 @@ namespace TDFDow30
                 if (resetFlag == false)
                 {
                     resetFlag = true;
-                    string msg = "[" + DateTime.Now + "] TDFDow30 reset error. Failed to reconnect after timed disconnect.";
+                    string msg = "[" + DateTime.Now + "] DataMonitor reset error. Failed to reconnect after timed disconnect.";
                     SendEmail(msg);
-                    log.Debug("TDFDow30 reset error. Failed to reconnect after timed disconnect.");
+                    log.Debug("DataMonitor reset error. Failed to reconnect after timed disconnect.");
                 }
             }
         }
@@ -2438,10 +2390,10 @@ namespace TDFDow30
                 if (zipperFlag == false)
                 {
                     zipperFlag = true;
-                    string msg = "[" + DateTime.Now + "] TDFDow30 write error. Error writing to Zipper Data File.";
+                    string msg = "[" + DateTime.Now + "] DataMonitor write error. Error writing to Zipper Data File.";
                     SendEmail(msg);
                     zipperEmailSent = DateTime.Now;
-                    log.Debug("TDFDow30 write error. Error writing to Zipper Data File.");
+                    log.Debug("DataMonitor write error. Error writing to Zipper Data File.");
                 }
 
             }
@@ -2454,14 +2406,15 @@ namespace TDFDow30
             if (timerFlag == false)
             {
                 timerFlag = true;
-                string msg = "[" + DateTime.Now + "] TDFRussel3000 response error. Data requested with no response.";
+                string msg = "[" + DateTime.Now + "] DataMonitor response error. Data requested with no response.";
+                log.Error("WatchdogTimer -" + msg);
                 SendEmail(msg);
                 timerEmailSent = DateTime.Now;
                 DisconnectFromTDF();
                 ResetTimer.Enabled = true;
                 timer1.Enabled = false;
             }
-            log.Debug("TDFRussel3000 response error. Data requested with no response.");
+            log.Debug("DataMonitor response error. Data requested with no response.");
 
         }
 
@@ -2539,55 +2492,68 @@ namespace TDFDow30
         private void fixSymbols(fin_Data fd)
         {
 
-            if (fd.fieldName != "isiErrCode" && fd.fieldName != "errMsg")
+            try
             {
-                symbolData sd = new symbolData();
-                Dow30Database.Dow30DB.Russel3000symbolData R3000 = new Dow30Database.Dow30DB.Russel3000symbolData();
-                sd.symbol = fd.symbol;
-                R3000.Symbol = fd.symbol;
-                int indx = addedSymbols.FindIndex(x => x.symbol == R3000.Symbol);
-
-                if (indx < 0)
+                if (fd.fieldName != "isiErrCode" && fd.fieldName != "errMsg")
                 {
-                    Russel3000Data.Add(R3000);
-                    TDFGlobals.symbols.Add(sd);
-                    addedSymbols.Add(sd);
-                    try
-                    {
-                        string fieldList = "trdPrc, netChg, pcntChg, opn, hi, lo, cumVol, lastActivity, lastActivityNetChg, lastActivityPcntChg, lastActivityVol, annHi, annLo, issuerName";
-                        string query = $"SELECT {fieldList} FROM QUOTES WHERE usrSymbol= {quot}{fd.symbol}{quot}";
-                        if (TRConnected)
-                        {
-                            ItfHeaderAccess itfHeaderAccess = new ItfHeaderAccess();
-                            byte[] outputbuf = itfHeaderAccess.Build_Outbuf(stdHeadr, query, TDFconstants.DATA_REQUEST, uint.MaxValue);
+                    symbolData sd = new symbolData();
+                    Dow30Database.Dow30DB.Russel3000symbolData R3000 = new Dow30Database.Dow30DB.Russel3000symbolData();
+                    sd.symbol = fd.symbol;
+                    R3000.Symbol = fd.symbol;
+                    int indx = addedSymbols.FindIndex(x => x.symbol == R3000.Symbol);
 
-                            TRSendCommand(outputbuf);
-                            log.Info($"Symbol {fd.symbol} not in the list. Checking info.");
+                    if (indx < 0)
+                    {
+                        Russel3000Data.Add(R3000);
+                        TDFGlobals.symbols.Add(sd);
+                        addedSymbols.Add(sd);
+                        try
+                        {
+                            string fieldList = "trdPrc, netChg, pcntChg, opn, hi, lo, cumVol, lastActivity, lastActivityNetChg, lastActivityPcntChg, lastActivityVol, annHi, annLo, issuerName";
+                            string query = $"SELECT {fieldList} FROM QUOTES WHERE usrSymbol= {quot}{fd.symbol}{quot}";
+                            if (TRConnected)
+                            {
+                                ItfHeaderAccess itfHeaderAccess = new ItfHeaderAccess();
+                                byte[] outputbuf = itfHeaderAccess.Build_Outbuf(stdHeadr, query, TDFconstants.DATA_REQUEST, uint.MaxValue);
+
+                                TRSendCommand(outputbuf);
+                                log.Info($"Symbol {fd.symbol} not in the list. Checking info.");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"fixSymbols error - {ex}");
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        log.Error($"fixSymbols error - {ex}");
-                    }
+                }
+                else
+                {
+                    if (fd.fieldName == "isiErrCode")
+                        log.Error($"Symbol { fd.symbol} has returned an error code of {fd.iData}");
+                    if (fd.fieldName == "errMsg")
+                        log.Error($"Symbol { fd.symbol} has returned an error {fd.sData}");
+                    symbolError = true;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                if (fd.fieldName == "isiErrCode")
-                    log.Error($"Symbol { fd.symbol} has returned an error code of {fd.iData}");
-                if (fd.fieldName == "errMsg")
-                    log.Error($"Symbol { fd.symbol} has returned an error {fd.sData}");
-                symbolError = true;
+                log.Error($"fixSymbols error; {ex}");
             }
         }
 
         private void UpdateDBNewSymbol(symbolData sd)
         {
-            UpdateDB(sd);
-            string msg = $"[{DateTime.Now}] New symbol detected:  {sd.symbol}   {sd.issuerName} {Environment.NewLine} {Environment.NewLine}Adding {sd.symbol} to DB.";
-            log.Info($"[{DateTime.Now}] New symbol detected:  {sd.symbol}   {sd.issuerName} {Environment.NewLine} {Environment.NewLine}Adding {sd.symbol} to DB.");
-            //SendEmail(msg);
-
+            try
+            {
+                UpdateDB(sd);
+                string msg = $"[{DateTime.Now}] New symbol detected:  {sd.symbol}   {sd.issuerName} {Environment.NewLine} {Environment.NewLine}Adding {sd.symbol} to DB.";
+                log.Info($"[{DateTime.Now}] New symbol detected:  {sd.symbol}   {sd.issuerName} {Environment.NewLine} {Environment.NewLine}Adding {sd.symbol} to DB.");
+                SendEmail(msg);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"UpdateDBNewSymbol error; {ex}");
+            }
         }
 
         private void label13_Click(object sender, EventArgs e)
@@ -2634,9 +2600,9 @@ namespace TDFDow30
             else
             {
                 resetFlag = true;
-                string msg = "[" + DateTime.Now + "] TDFDow30 reset error. Failed to reconnect after timed disconnect.";
+                string msg = "[" + DateTime.Now + "] DataMonitor reset error. Failed to reconnect after timed disconnect.";
                 SendEmail(msg);
-                log.Debug("TDFDow30 reset error. Failed to reconnect after timed disconnect.");
+                log.Debug("DataMonitor reset error. Failed to reconnect after timed disconnect.");
             }
         }
 
@@ -2673,6 +2639,16 @@ namespace TDFDow30
             DailyResetLabel.Text = $"Next Daily Reset: {disconnectTime}";
 
             return disconnectTime;
+
+        }
+
+        private void DataResetLabel_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DailyResetLabel_Click(object sender, EventArgs e)
+        {
 
         }
     }

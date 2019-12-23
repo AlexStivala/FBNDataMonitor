@@ -17,15 +17,15 @@
     <Setting Name="dbConn" Type="(Connection string)" Scope="Application">
       <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;ConnectionString&gt;Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1&lt;/ConnectionString&gt;
+  &lt;ConnectionString&gt;Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1&lt;/ConnectionString&gt;
 &lt;/SerializableConnectionString&gt;</DesignTimeValue>
-      <Value Profile="(Default)">Data Source=SQL-dev;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1</Value>
+      <Value Profile="(Default)">Data Source=FBN-SQL-PRI;Initial Catalog=TDF_Symbols_new;Persist Security Info=True;User ID=sa;Password=Engineer@1</Value>
     </Setting>
     <Setting Name="Reset_Connection" Type="System.TimeSpan" Scope="Application">
       <Value Profile="(Default)">01:45:00</Value>
     </Setting>
     <Setting Name="dbTableName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Russel3000</Value>
+      <Value Profile="(Default)">SP1500</Value>
     </Setting>
     <Setting Name="Dynamic" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

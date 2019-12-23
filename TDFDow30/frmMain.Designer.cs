@@ -56,7 +56,6 @@
             this.lblReceivedTime = new System.Windows.Forms.Label();
             this.gbTime = new System.Windows.Forms.GroupBox();
             this.timeOfDayLabel = new System.Windows.Forms.Label();
-            this.symbolDataGrid = new System.Windows.Forms.DataGridView();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
@@ -94,7 +93,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.gbTimeOfLastDelete.SuspendLayout();
             this.gbTime.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.symbolDataGrid)).BeginInit();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.SuspendLayout();
@@ -361,6 +359,7 @@
             this.DataResetLabel.Size = new System.Drawing.Size(128, 25);
             this.DataResetLabel.TabIndex = 176;
             this.DataResetLabel.Text = "Data reset at:";
+            this.DataResetLabel.Click += new System.EventHandler(this.DataResetLabel_Click);
             // 
             // gbTimeOfLastDelete
             // 
@@ -417,22 +416,6 @@
             this.timeOfDayLabel.TabIndex = 0;
             this.timeOfDayLabel.Text = "--";
             this.timeOfDayLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // symbolDataGrid
-            // 
-            this.symbolDataGrid.ColumnHeadersHeight = 34;
-            this.symbolDataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.symbolDataGrid.Location = new System.Drawing.Point(232, 610);
-            this.symbolDataGrid.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.symbolDataGrid.MultiSelect = false;
-            this.symbolDataGrid.Name = "symbolDataGrid";
-            this.symbolDataGrid.ReadOnly = true;
-            this.symbolDataGrid.RowHeadersWidth = 20;
-            this.symbolDataGrid.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.symbolDataGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.symbolDataGrid.Size = new System.Drawing.Size(562, 62);
-            this.symbolDataGrid.TabIndex = 173;
-            this.symbolDataGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
             // button1
             // 
@@ -731,6 +714,7 @@
             this.DailyResetLabel.Size = new System.Drawing.Size(128, 25);
             this.DailyResetLabel.TabIndex = 195;
             this.DailyResetLabel.Text = "Data reset at:";
+            this.DailyResetLabel.Click += new System.EventHandler(this.DailyResetLabel_Click);
             // 
             // ServerResetLabel
             // 
@@ -754,7 +738,6 @@
             this.Controls.Add(this.DailyResetLabel);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
-            this.Controls.Add(this.symbolDataGrid);
             this.Controls.Add(this.button8);
             this.Controls.Add(this.DataResetLabel);
             this.Controls.Add(this.button7);
@@ -771,7 +754,7 @@
             this.Controls.Add(this.gbTime);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "frmMain";
-            this.Text = "TDF Dow 30  v1.5.3";
+            this.Text = "SP 1500 Data Monitor version 1.1.1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.groupBox5.ResumeLayout(false);
@@ -783,7 +766,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.gbTimeOfLastDelete.ResumeLayout(false);
             this.gbTime.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.symbolDataGrid)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
@@ -817,7 +799,6 @@
         private System.Windows.Forms.Label lblReceivedTime;
         private System.Windows.Forms.GroupBox gbTime;
         private System.Windows.Forms.Label timeOfDayLabel;
-        private System.Windows.Forms.DataGridView symbolDataGrid;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Label DataResetLabel;
