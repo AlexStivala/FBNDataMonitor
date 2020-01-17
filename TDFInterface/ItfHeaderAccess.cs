@@ -231,6 +231,8 @@ namespace TDFInterface
             
             return itfu;
         }
+        
+
         public itf_Control_Message ParseItfControlMessage(byte[] ldata)
         {
 
@@ -260,11 +262,18 @@ namespace TDFInterface
             else
                 buflen = data.Length - 26;
 
-            byte[] mess = new byte[buflen + 1];
-            Array.Copy(data, 9, mess, 0, buflen - 1);
-            icm.Message.AddRange(mess);
-            icm.totalMessageSize = icm.Message.Count + 6;
+            if (ldata.Length >= 11)
+            {
+                icm.messageLen = BitConverter.ToUInt16(data, 9);
+                byte[] mess = new byte[icm.messageLen];
+                if (ldata.Length >= icm.messageLen + 11)
+                {
+                    Array.Copy(data, 11, mess, 0, icm.messageLen - 2);
+                    icm.Message.AddRange(mess);
+                }
+            }
 
+            icm.totalMessageSize = icm.Message.Count + 6;
             icm.itf_Short_Header = itfsh;
             icm.control_Message_Header = cmh;
 

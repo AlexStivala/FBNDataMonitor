@@ -86,6 +86,7 @@ namespace TDFInterface
     {
         public itf_Short_Header itf_Short_Header { get; set; }
         public Control_Message_Header control_Message_Header { get; set; }
+        public int messageLen { get; set; }
         public List<byte> Message = new List<byte>();
         public Int32 totalMessageSize { get; set; }
 

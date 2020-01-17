@@ -641,11 +641,15 @@ namespace TDFDow30
                 }
                 else
                 {
+                    symbolData sym1 = GetNewSymbol(sd.Symbol);
                     string deleteCmd = $"DELETE FROM SP1500 WHERE Symbol = '{sd.Symbol}'";
                     int nd = Dow30Database.Dow30DB.SQLExec(deleteCmd, dbConn);
+                    string msg = $" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Symbol {sd.Symbol} {sd.Name} deleted from SP1500 database.";
+                    if (sym1.symbol != "error")
+                        msg += $"\r\n Replaced by {sym1.symbol}  {sym1.issuerName}";
                     if (nd > 0)
-                        log.Info($" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Symbol {sd.Symbol} deleted from SP1500 database");
-                    string msg = $" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Symbol {sd.Symbol} deleted from SP1500 database";
+                        log.Info(msg);
+
                     SendEmail(msg);
                 }
 
@@ -674,6 +678,69 @@ namespace TDFDow30
             }
             // start data collection
             timer1.Enabled = true;
+
+        }
+
+        public symbolData GetNewSymbol(string symbol)
+        {
+            string fieldList = "issuerName";
+            string quot = "\"";
+            string query = $"SELECT {fieldList} FROM QUOTES WHERE usrSymbol= {quot}{symbol}{quot}";
+            
+            symbolData sd1 = new symbolData();
+            sd1.symbol = "error";
+            sd1.issuerName = "";
+            sd1.seqId = 5;
+            sd1.isiErrCode = 0;
+            sd1.errMsg = "";
+
+            if (TRConnected)
+            {
+                ItfHeaderAccess itfHeaderAccess = new ItfHeaderAccess();
+                byte[] outputbuf = itfHeaderAccess.Build_Outbuf(stdHeadr, query, TDFconstants.DATA_REQUEST, 5);
+
+                TRSendCommand(outputbuf);
+                Thread.Sleep(2);
+            }
+
+            bool done = false;
+            string s = "";
+            string sym = "";
+            int cnt = 0;
+            int frNum = 1;
+
+            while (!done)
+            {
+                if (TDFGlobals.financialResults.Count >= frNum)
+                {
+                    for (int i = 0; i < TDFGlobals.financialResults.Count; i++)
+                    {
+                        sym = TDFGlobals.financialResults[i].symbol;
+                        if (TDFGlobals.financialResults[i].fieldName == "issuerName")
+                        {
+                            sd1.symbol = sym;
+                            sd1.issuerName = TDFGlobals.financialResults[i].sData;
+                        }
+                        else if (TDFGlobals.financialResults[i].fieldName == "errMsg" || TDFGlobals.financialResults[i].fieldName == "isiErrCode")
+                        {
+                            sd1.symbol = "error";
+                            sd1.issuerName = "";
+                        }
+
+                    }
+                    TDFGlobals.financialResults.Clear();
+                    done = true;
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                    cnt++;
+                    if (cnt > 20)
+                        done = true;
+                }
+            }
+
+            return sd1;
 
         }
 
@@ -768,6 +835,7 @@ namespace TDFDow30
                         {
 
                             TRControlMessage = itfHeaderAccess.ParseItfControlMessage(TRdata.ToArray());
+                            //log.Info($"Control Message Code: {TRControlMessage.control_Message_Header.messageCode}   Control Message: {TRControlMessage.Message}");
                             log.Info($"Control Message Code: {TRControlMessage.control_Message_Header.messageCode}");
                             TRdata.RemoveRange(0, TRmessage.itf_Header.msgSize + 1);
                             dataLeft = TRdata.Count;
@@ -1402,7 +1470,7 @@ namespace TDFDow30
             {
                 bool emailSent = false;
                 string msg = $"UpdateDynamicSymbols: {ex.Message}    {ex.Source}    {ex.StackTrace}";
-                if (DateTime.Now > lastEmail.AddMinutes(15))
+                if (DateTime.Now > lastEmail.AddMinutes(60))
                 {
                     SendEmail(msg);
                     emailSent = true;

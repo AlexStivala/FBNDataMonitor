@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -188,7 +188,7 @@ namespace TDFInterface
 
             string quot = "\"";
             //SqlCommand cmd = new SqlCommand($"p_GetCompanyInfo {quot}{sym.symbol}{quot}", dbConn);
-            SqlCommand cmd = new SqlCommand($"p_GetSymbolInfo {quot}{sym.symbol}{quot}", dbConn);
+            SqlCommand cmd = new SqlCommand($"p_GetSymbolInfoEx {quot}{sym.symbol}{quot}", dbConn);
             cmd.CommandType = CommandType.Text;
 
             SqlDataReader sqlData = cmd.ExecuteReader();
@@ -218,8 +218,9 @@ namespace TDFInterface
                     companyInfo.Company_Name_Long = row["Company_Name_Long"].ToString().Trim();
                     companyInfo.Company_Name_Short = row["Company_Name_Short"].ToString().Trim();
                     companyInfo.symbol_Valid = true;
-                    sym.securityType = Convert.ToInt32(row["sectyType"]);
-                    
+                    companyInfo.securityType = Convert.ToInt32(row["Security_Type"]);
+                    //sym.securityType = Convert.ToInt32(row["sectyType"]);
+
 
                 }
                 companyInfo.symbol = sym;
@@ -532,7 +533,6 @@ namespace TDFInterface
 
         }
 
-
-
+        
     }
 }
