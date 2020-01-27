@@ -121,6 +121,7 @@ namespace TDFInterface
         public static TimeSpan marketOpen = new TimeSpan(9, 30, 00); //9:30 am
         public static TimeSpan marketClose = new TimeSpan(16, 00, 0); //4:00 pm 
         public static bool marketOpenStatus;
+        public static bool eflag = false;
 
 
     }

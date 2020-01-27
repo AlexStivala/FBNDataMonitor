@@ -494,18 +494,9 @@ namespace TDFDow30
                 }
             }
 
-            /*
-            System.Threading.Thread.Sleep(1000);
-            if (TRConnected == true)
-            {
-                pictureBox2.Visible = true;
-            }
-            */
-
             ItfHeaderAccess itfHeaderAccess = new ItfHeaderAccess();
             byte[] outputbuf = itfHeaderAccess.Build_Outbuf(stdHeadr, queryStr, TDFconstants.LOGON_REQUEST, 0);
             TRSendCommand(outputbuf);
-
 
             n = 0;
             done = false;
@@ -534,7 +525,6 @@ namespace TDFDow30
 
             }
 
-
             TDFProcessingFunctions TDFproc = new TDFProcessingFunctions();
             TDFproc.sendBuf += new SendBuf(TRSendCommand);
             //lblLogResp.Text = logResp;
@@ -542,7 +532,7 @@ namespace TDFDow30
             //label7.Text = "Num Catalogs: " + numCat.ToString();
             
             TDFproc.GetFieldInfoTable();
-            System.Threading.Thread.Sleep(3000);
+            System.Threading.Thread.Sleep(300);
             Int32 cnt = 0;
 
             for (int i = 0; i < TDFGlobals.field_Info_Table.Length; i++)
@@ -554,10 +544,8 @@ namespace TDFDow30
 
             label6.Text = "Number of Fields: " + cnt.ToString();
             label7.Text = "Num Catalogs: " + TDFGlobals.numCat.ToString();
-
             
             GetSymbols();
-            
         }
 
         public void GetSymbols()
@@ -565,7 +553,6 @@ namespace TDFDow30
             log.Debug("Initializing symbols...");
             // get data from db table to get symbol list
             string cmd = $"SELECT * FROM {dbTableName}";
-            //Dow30Data = Dow30Database.Dow30DB.GetSymbolDataCollection(connection, dbConn);
             Russel3000Data.Clear();
             R3000UpdateData.Clear();
             Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, dbConn);
@@ -574,7 +561,7 @@ namespace TDFDow30
                 R3000UpdateData.Add(R3000);
 
             System.Threading.Thread.Sleep(100);
-            
+
             // create symbol list and set up symbols collection
             bool first = true;
             string symListStr = "";
@@ -594,31 +581,28 @@ namespace TDFDow30
                     if (dynamic)
                         sd1.queryType = (int)QueryTypes.Dynamic_Quotes;
                     else
+                    {
                         sd1.queryType = (int)QueryTypes.Portfolio_Mgr;
+                        if (first == false)
+                            symListStr += ", " + sd.Symbol;
+                        else
+                        {
+                            symListStr = sd.Symbol;
+                            first = false;
+                        }
 
-                    if (first == false)
-                    {
-                        symListStr += ", " + sd.Symbol;
+                        nSymbols++;
+                        tot++;
+                        if (nSymbols == 50 || tot == totSymbols)
+                        {
+                            symbolListStr.Add(symListStr);
+                            nSymbols = 0;
+                            first = true;
+                        }
                     }
-                    else
-                    {
-                        symListStr = sd.Symbol;
-                        first = false;
-                    }
-
-                    nSymbols++;
-                    tot++;
-                    if (nSymbols == 50 || tot == totSymbols)
-                    {
-                        symbolListStr.Add(symListStr);
-                        nSymbols = 0;
-                        first = true;
-                    }
-
 
                     sd1.queryStr = "";
                     sd1.symbol = sd.Symbol;
-                    //sd1.company_Name = sd.Name.ToUpper();
                     sd1.seqId = 5;
                     sd1.updated = sd.Updated;
                     sd1.trdPrc = sd.Last;
@@ -634,10 +618,15 @@ namespace TDFDow30
                     sd1.annHi = sd.annHi;
                     sd1.annLo = sd.annLo;
 
-                    //TDFGlobals.Dow30symbols.Add(sd.Symbol);
                     TDFGlobals.symbols.Add(sd1);
                     n++;
-                    UpdateDBCompanyName(sd1);
+
+                    if (!TDFGlobals.eflag)
+                    {
+                        UpdateDBCompanyName(sd1);
+                        TDFGlobals.eflag = false;
+                    }
+
                 }
                 else
                 {
@@ -664,7 +653,6 @@ namespace TDFDow30
             foreach (Dow30Database.Dow30DB.Russel3000symbolData R3000 in Russel3000Data)
                 R3000UpdateData.Add(R3000);
 
-
             if (dynamic)
             {
                 log.Debug("Issuing dynamic subscription queries...");
@@ -672,13 +660,12 @@ namespace TDFDow30
                 {
                     ui++;
                     IssueDynamicSubscriptionQuery(sd.Symbol, ui);
-                    Thread.Sleep(5);
+                    Thread.Sleep(2);
                 }
                 log.Debug("Dynamic subscription queries complete ...");
             }
             // start data collection
             timer1.Enabled = true;
-
         }
 
         public symbolData GetNewSymbol(string symbol)
@@ -708,6 +695,7 @@ namespace TDFDow30
             string sym = "";
             int cnt = 0;
             int frNum = 1;
+            Thread.Sleep(100);
 
             while (!done)
             {
@@ -1212,7 +1200,10 @@ namespace TDFDow30
                 else
                 {
                     if (!updateFlag)
+                    {
+                        updateFlag = true;
                         Task.Run(() => UpdateAll());
+                    }
                     else
                     {
                         nSkip++;
@@ -1373,109 +1364,137 @@ namespace TDFDow30
 
         public void UpdateDynamicSymbols()
         {
+            int eCode = 0;
+
             try
             {
                 string sym = "";
                 string oldSym = "";
                 int symbolIndex = -1;
-                int n = TDFGlobals.financialResults.Count;
                 bool updateNewSymbol = false;
-                fin_Data fd = new fin_Data();
                 List<int> updateIndx = new List<int>();
 
+                int n = TDFGlobals.financialResults.Count;
                 if (n > 0)
                 {
                     for (int i = 0; i < n; i++)
                     {
-                        fd = TDFGlobals.financialResults[i];
-                        sym = TDFGlobals.financialResults[i].symbol;
-                        if (sym != oldSym && sym != null)
+                        eCode = 1;
+                        if (i <= TDFGlobals.financialResults.Count - 1)
                         {
-                            // new symbol
-                            // Update previous symbol except first one or last symbol was an error
-                            if (i > 0)
+                            fin_Data fd = new fin_Data();
+                            fd = TDFGlobals.financialResults[i];
+                            sym = TDFGlobals.financialResults[i].symbol;
+                            eCode = 22;
+                            if (sym != oldSym && sym != null)
                             {
-                                // update previous symbol
-                                if (symbolIndex >= 0 && symbolError == false)
-                                    UpdateSymbol(symbolIndex);
+                                // new symbol
+                                // Update previous symbol except first one or last symbol was an error
+                                if (i > 0)
+                                {
+                                    // update previous symbol
+                                    if (symbolIndex >= 0 && symbolError == false)
+                                        UpdateSymbol(symbolIndex);
+                                    else
+                                    {
+                                        log.Error($"Previous symbol not updated.  Symbol : {oldSym}");
+                                    }
+                                }
+
+                                eCode = 2;
+                                symbolIndex = TDFProcessingFunctions.GetSymbolIndx(TDFGlobals.financialResults[i].symbol);
+                                if (symbolIndex >= 0)
+                                {
+                                    symbolError = false;
+                                    TDFGlobals.symbols[symbolIndex].updated = DateTime.Now;
+                                }
                                 else
                                 {
-                                    log.Error($"Previous symbol not updated.  Symbol : {oldSym}");
+                                    //fin_Data fd = new fin_Data();
+                                    if (sym.Length > 0)
+                                        fixSymbols(TDFGlobals.financialResults[i]);
+                                    log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}");
+
                                 }
+                                oldSym = sym;
+                                eCode = 3;
+
                             }
 
-                            symbolIndex = TDFProcessingFunctions.GetSymbolIndx(TDFGlobals.financialResults[i].symbol);
+
                             if (symbolIndex >= 0)
                             {
-                                symbolError = false;
-                                TDFGlobals.symbols[symbolIndex].updated = DateTime.Now;
+                                eCode = 4;
+                                TDFProcessingFunctions.SetSymbolData(TDFGlobals.financialResults, i, symbolIndex);
                             }
-                            else
+                            else if (sym.Length > 0)
                             {
-                                //fin_Data fd = new fin_Data();
-                                if (sym.Length > 0)
-                                    fixSymbols(TDFGlobals.financialResults[i]);
-                                log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}");
+                                eCode = 5;
+                                log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {TDFGlobals.financialResults[i].fieldName}");
+                                //fd = TDFGlobals.financialResults[i];
+                                fixSymbols(TDFGlobals.financialResults[i]);
+                                eCode = 6;
 
                             }
-                            oldSym = sym;
-                        }
-
-                        
-                        if (symbolIndex >= 0)
-                        {
-                            TDFProcessingFunctions.SetSymbolData(TDFGlobals.financialResults, i, symbolIndex);
-                        }
-                        else if(sym.Length > 0)
-                        {
-                            log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {TDFGlobals.financialResults[i].fieldName}");
-                            //fd = TDFGlobals.financialResults[i];
-                            fixSymbols(TDFGlobals.financialResults[i]);
-                            
-                        }
-                        if (TDFGlobals.financialResults[i].fieldName == "issuerName")
-                        {
-
-                            if (TDFGlobals.symbols[symbolIndex].issuerName != null && TDFGlobals.symbols[symbolIndex].issuerName.Length > 0)
+                            if (TDFGlobals.financialResults[i].fieldName == "issuerName")
                             {
-                                updateNewSymbol = true;
-                                Russel3000Data[symbolIndex].Name = TDFGlobals.symbols[symbolIndex].issuerName;
-                                log.Info($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}  Name : {TDFGlobals.symbols[i].issuerName}");
-                                updateIndx.Add(symbolIndex);
+
+                                eCode = 7;
+
+                                if (TDFGlobals.symbols[symbolIndex].issuerName != null && TDFGlobals.symbols[symbolIndex].issuerName.Length > 0)
+                                {
+                                    updateNewSymbol = true;
+                                    Russel3000Data[symbolIndex].Name = TDFGlobals.symbols[symbolIndex].issuerName;
+                                    log.Info($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}  Name : {TDFGlobals.symbols[i].issuerName}");
+                                    updateIndx.Add(symbolIndex);
+                                }
                             }
                         }
-
                     }
                 }
 
                 // Do last symbol
+                eCode = 8;
+
                 if (symbolIndex >= 0)
                 {
+                    eCode = 9;
+
                     UpdateSymbol(symbolIndex);
+                    eCode = 10;
+
                 }
                 else
                 {
+                    eCode = 11;
+
                     log.Error($"symbolIndex < 0  Symbol : {sym}");
                     if (sym.Length > 0)
                         fixSymbols(TDFGlobals.financialResults[n - 1]);
+                    eCode = 12;
+
                 }
 
                 if (updateNewSymbol)
                     for (int i = 0; i < updateIndx.Count; i++)
                         UpdateDBNewSymbol(TDFGlobals.symbols[updateIndx[i]]);
+                eCode = 13;
 
                 TDFGlobals.financialResults.RemoveRange(0, n);
+                eCode = 14;
+
             }
             catch (Exception ex)
             {
+
                 bool emailSent = false;
-                string msg = $"UpdateDynamicSymbols: {ex.Message}    {ex.Source}    {ex.StackTrace}";
+                string msg = $"UpdateDynamicSymbols: eCode: {eCode}   {ex.Message}    {ex.Source}    {ex.StackTrace}";
                 if (DateTime.Now > lastEmail.AddMinutes(60))
                 {
                     SendEmail(msg);
                     emailSent = true;
                 }
-                log.Error($"UpdateDynamicSymbols: {ex.Message}    {ex.Source}    {ex.StackTrace}");
+                log.Error($"UpdateDynamicSymbols: eCode: {eCode}   {ex.Message}    {ex.Source}    {ex.StackTrace}");
                 TRdata.Clear();
                 
                 log.Debug($"Starting error reset procedure.....");
@@ -1487,7 +1506,7 @@ namespace TDFDow30
                     log.Debug("Unsubscribe complete.");
                 }
                 DisconnectFromTDF();
-                Thread.Sleep(1000);
+                Thread.Sleep(50);
                 TDFGlobals.symbols.Clear();
                 TDFGlobals.financialResults.Clear();
                 dataLeft = 0;
@@ -1495,6 +1514,7 @@ namespace TDFDow30
                 log.Debug($"Reconnecting now .....");
 
                 //log.Debug("Starting reconnect...");
+                TDFGlobals.eflag = true;
                 ConnectToTDF();
                 Thread.Sleep(2000);
                 resetting = false;
@@ -1519,6 +1539,7 @@ namespace TDFDow30
                     lastEmail = DateTime.Now;
                 timer1.Enabled = true;
                 WatchdogTimer.Enabled = true;
+                TDFGlobals.eflag = false;
             }
 
         }
@@ -2022,7 +2043,7 @@ namespace TDFDow30
                 log.Debug("Unsubscribe complete");
             }
             Logoff();
-            Thread.Sleep(1000);
+            Thread.Sleep(100);
             log.Debug("*****  TDFRussell3000 Closed *****");
         }
         private void Logoff()
@@ -2037,7 +2058,7 @@ namespace TDFDow30
         public void DisconnectFromTDF()
         {
             Logoff();
-            Thread.Sleep(200);
+            Thread.Sleep(50);
             TRClientSocket.Disconnect();
             if (this.InvokeRequired && connectLite == null)
                 this.Invoke(new ConnectLite(connectLED), false);
@@ -2045,7 +2066,7 @@ namespace TDFDow30
             {
                 pictureBox2.Visible = false;
             }
-            Thread.Sleep(200);
+            Thread.Sleep(50);
             
         }
 
