@@ -54,5 +54,32 @@
     <Setting Name="TDFServer_ID" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">3</Value>
     </Setting>
+    <Setting Name="PrimaryServer" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">FBN-SQL-PRI</Value>
+    </Setting>
+    <Setting Name="BackupServer" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">FBN-SQL-BKUP</Value>
+    </Setting>
+    <Setting Name="SQLUserNamePri" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">sa</Value>
+    </Setting>
+    <Setting Name="SQLPWPri" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Engineer@1</Value>
+    </Setting>
+    <Setting Name="SQLUserNameBk" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">sa</Value>
+    </Setting>
+    <Setting Name="SQLPWBk" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Engineer@1</Value>
+    </Setting>
+    <Setting Name="UseBackupServer" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="SymbolsDB" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">TDF_Symbols_new</Value>
+    </Setting>
+    <Setting Name="MarketDataDB" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">TDF_Symbols_new</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

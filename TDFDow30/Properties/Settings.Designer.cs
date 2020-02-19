@@ -168,5 +168,86 @@ namespace TDFDow30.Properties {
                 return ((int)(this["TDFServer_ID"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("FBN-SQL-PRI")]
+        public string PrimaryServer {
+            get {
+                return ((string)(this["PrimaryServer"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("FBN-SQL-BKUP")]
+        public string BackupServer {
+            get {
+                return ((string)(this["BackupServer"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("sa")]
+        public string SQLUserNamePri {
+            get {
+                return ((string)(this["SQLUserNamePri"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Engineer@1")]
+        public string SQLPWPri {
+            get {
+                return ((string)(this["SQLPWPri"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("sa")]
+        public string SQLUserNameBk {
+            get {
+                return ((string)(this["SQLUserNameBk"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Engineer@1")]
+        public string SQLPWBk {
+            get {
+                return ((string)(this["SQLPWBk"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseBackupServer {
+            get {
+                return ((bool)(this["UseBackupServer"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("TDF_Symbols_new")]
+        public string SymbolsDB {
+            get {
+                return ((string)(this["SymbolsDB"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("TDF_Symbols_new")]
+        public string MarketDataDB {
+            get {
+                return ((string)(this["MarketDataDB"]));
+            }
+        }
     }
 }

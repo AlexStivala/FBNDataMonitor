@@ -314,7 +314,55 @@ namespace TDFDow30
                 label3.Text = dbTableName;
 
 
-                
+                string primaryServer = Properties.Settings.Default.PrimaryServer;
+                string backupServer = Properties.Settings.Default.BackupServer;
+                string UserPri = Properties.Settings.Default.SQLUserNamePri;
+                string PwPri = Properties.Settings.Default.SQLPWPri;
+                string UserBk = Properties.Settings.Default.SQLUserNameBk;
+                string PwBk = Properties.Settings.Default.SQLPWBk;
+                bool useBackupServer = Properties.Settings.Default.UseBackupServer;
+
+                string server;
+                string User;
+                string PW;
+                if (useBackupServer)
+                {
+                    server = backupServer;
+                    User = UserBk;
+                    PW = PwBk;
+                    log.Info($"Using backup SQL server {server}");
+                }
+                else
+                {
+                    server = primaryServer;
+                    User = UserPri;
+                    PW = PwPri;
+                    log.Info($"Using primary SQLserver {server}");
+                }
+
+                var symBuilder = new SqlConnectionStringBuilder();
+                symBuilder.UserID = User;
+                symBuilder.Password = PW;
+                symBuilder.DataSource = server;
+                symBuilder.InitialCatalog = Properties.Settings.Default.SymbolsDB;
+                symBuilder.PersistSecurityInfo = true;
+                TDFGlobals.dbConnSymbols = symBuilder.ConnectionString;
+                log.Info($"Symbols Database {symBuilder.InitialCatalog}");
+                //log.Info($"SymbolsDBConnectionString {dbConnSymbols}");
+
+                var mktBuilder = new SqlConnectionStringBuilder();
+                mktBuilder.UserID = User;
+                mktBuilder.Password = PW;
+                mktBuilder.DataSource = server;
+                mktBuilder.InitialCatalog = Properties.Settings.Default.MarketDataDB;
+                mktBuilder.PersistSecurityInfo = true;
+                TDFGlobals.dbConnMarket = mktBuilder.ConnectionString;
+                log.Info($"Market Database {mktBuilder.InitialCatalog}");
+                //log.Info($"MarketDBConnectionString {dbConnMarket}");
+
+
+
+
                 DateTime timeNow = DateTime.Now;
                 if (timeNow.DayOfWeek != DayOfWeek.Saturday && timeNow.DayOfWeek != DayOfWeek.Sunday)
                     weekday = true;
@@ -404,8 +452,9 @@ namespace TDFDow30
                 //ChartClosed += new EventHandler<ChartClosedEventArgs>(ChartClosed);
 
                 string cmd = $"SELECT * FROM MarketHolidays";
-                marketHolidays = Dow30Database.Dow30DB.GetHolidays(cmd, dbConn);
-
+                //marketHolidays = Dow30Database.Dow30DB.GetHolidays(cmd, dbConn);
+                marketHolidays = Dow30Database.Dow30DB.GetHolidays(cmd, TDFGlobals.dbConnMarket);
+                
                 marketIsOpen = MarketOpenStatus();
                 if (marketIsOpen)
                     dataReset = false;
@@ -555,7 +604,8 @@ namespace TDFDow30
             string cmd = $"SELECT * FROM {dbTableName}";
             Russel3000Data.Clear();
             R3000UpdateData.Clear();
-            Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, dbConn);
+            //Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, dbConn);
+            Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, TDFGlobals.dbConnSymbols);
 
             foreach (Dow30Database.Dow30DB.Russel3000symbolData R3000 in Russel3000Data)
                 R3000UpdateData.Add(R3000);
@@ -632,7 +682,8 @@ namespace TDFDow30
                 {
                     symbolData sym1 = GetNewSymbol(sd.Symbol);
                     string deleteCmd = $"DELETE FROM SP1500 WHERE Symbol = '{sd.Symbol}'";
-                    int nd = Dow30Database.Dow30DB.SQLExec(deleteCmd, dbConn);
+                    //int nd = Dow30Database.Dow30DB.SQLExec(deleteCmd, dbConn);
+                    int nd = Dow30Database.Dow30DB.SQLExec(deleteCmd, TDFGlobals.dbConnSymbols);
                     string msg = $" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Symbol {sd.Symbol} {sd.Name} deleted from SP1500 database.";
                     if (sym1.symbol != "error")
                         msg += $"\r\n Replaced by {sym1.symbol}  {sym1.issuerName}";
@@ -648,7 +699,8 @@ namespace TDFDow30
 
             Russel3000Data.Clear();
             R3000UpdateData.Clear();
-            Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, dbConn);
+            //Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, dbConn);
+            Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(cmd, TDFGlobals.dbConnSymbols);
 
             foreach (Dow30Database.Dow30DB.Russel3000symbolData R3000 in Russel3000Data)
                 R3000UpdateData.Add(R3000);
@@ -1193,7 +1245,8 @@ namespace TDFDow30
                         UpdateAllSymbols(false);
 
                         string connection = $"SELECT * FROM {dbTableName}";
-                        Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(connection, dbConn);
+                        //Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(connection, dbConn);
+                        Russel3000Data = Dow30Database.Dow30DB.GetRussel3000SymbolDataCollection(connection, TDFGlobals.dbConnSymbols);
                         //label1.Text = $"Elapsed: {ts.TotalMilliseconds.ToString()} msec";
                     }
                 }
@@ -1365,15 +1418,15 @@ namespace TDFDow30
         public void UpdateDynamicSymbols()
         {
             int eCode = 0;
+            string sym = "";
+            string oldSym = "";
+            int symbolIndex = -1;
+            bool updateNewSymbol = false;
+            List<int> updateIndx = new List<int>();
 
             try
             {
-                string sym = "";
-                string oldSym = "";
-                int symbolIndex = -1;
-                bool updateNewSymbol = false;
-                List<int> updateIndx = new List<int>();
-
+                
                 int n = TDFGlobals.financialResults.Count;
                 if (n > 0)
                 {
@@ -1390,6 +1443,7 @@ namespace TDFDow30
                             {
                                 // new symbol
                                 // Update previous symbol except first one or last symbol was an error
+                                eCode = 23;
                                 if (i > 0)
                                 {
                                     // update previous symbol
@@ -1403,16 +1457,23 @@ namespace TDFDow30
 
                                 eCode = 2;
                                 symbolIndex = TDFProcessingFunctions.GetSymbolIndx(TDFGlobals.financialResults[i].symbol);
+                                eCode = 24;
                                 if (symbolIndex >= 0)
                                 {
                                     symbolError = false;
                                     TDFGlobals.symbols[symbolIndex].updated = DateTime.Now;
+                                    eCode = 25;
+
                                 }
                                 else
                                 {
                                     //fin_Data fd = new fin_Data();
+                                    eCode = 26;
+
                                     if (sym.Length > 0)
                                         fixSymbols(TDFGlobals.financialResults[i]);
+                                    eCode = 27;
+
                                     log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}");
 
                                 }
@@ -1421,13 +1482,14 @@ namespace TDFDow30
 
                             }
 
+                            eCode = 28;
 
                             if (symbolIndex >= 0)
                             {
                                 eCode = 4;
                                 TDFProcessingFunctions.SetSymbolData(TDFGlobals.financialResults, i, symbolIndex);
                             }
-                            else if (sym.Length > 0)
+                            else if (sym != null && sym.Length > 0)
                             {
                                 eCode = 5;
                                 log.Error($"symbolIndex < 0  Symbol : {sym}  fieldName : {TDFGlobals.financialResults[i].fieldName}");
@@ -1436,17 +1498,32 @@ namespace TDFDow30
                                 eCode = 6;
 
                             }
+
                             if (TDFGlobals.financialResults[i].fieldName == "issuerName")
                             {
 
                                 eCode = 7;
 
-                                if (TDFGlobals.symbols[symbolIndex].issuerName != null && TDFGlobals.symbols[symbolIndex].issuerName.Length > 0)
+                                string newSym = TDFGlobals.financialResults[i].symbol;
+                                int newSymbolIndex = TDFProcessingFunctions.GetSymbolIndx(newSym);
+                                if (newSymbolIndex >= 0)
                                 {
-                                    updateNewSymbol = true;
-                                    Russel3000Data[symbolIndex].Name = TDFGlobals.symbols[symbolIndex].issuerName;
-                                    log.Info($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}  Name : {TDFGlobals.symbols[i].issuerName}");
-                                    updateIndx.Add(symbolIndex);
+                                    if (TDFGlobals.symbols[newSymbolIndex].issuerName != null && TDFGlobals.symbols[newSymbolIndex].issuerName.Length > 0)
+                                    {
+                                        eCode = 17;
+                                        updateNewSymbol = true;
+                                        Russel3000Data[symbolIndex].Name = TDFGlobals.symbols[symbolIndex].issuerName;
+                                        log.Info($"symbolIndex < 0  Symbol : {sym}  fieldName : {fd.fieldName}  Name : {TDFGlobals.symbols[i].issuerName}");
+                                        updateIndx.Add(symbolIndex);
+                                        eCode = 18;
+
+                                    }
+                                }
+                                else
+                                {
+                                    eCode = 19;
+                                    log.Info($"newSymbolIndex < 0  Symbol : {newSym}  Name : {TDFGlobals.financialResults[i].fieldName}");
+
                                 }
                             }
                         }
@@ -1488,13 +1565,13 @@ namespace TDFDow30
             {
 
                 bool emailSent = false;
-                string msg = $"UpdateDynamicSymbols: eCode: {eCode}   {ex.Message}    {ex.Source}    {ex.StackTrace}";
+                string msg = $"UpdateDynamicSymbols: eCode: {eCode}   sym: {sym} {symbolIndex}  oldSym: {oldSym}   {ex.Message}    {ex.Source}    {ex.StackTrace}";
                 if (DateTime.Now > lastEmail.AddMinutes(60))
                 {
                     SendEmail(msg);
                     emailSent = true;
                 }
-                log.Error($"UpdateDynamicSymbols: eCode: {eCode}   {ex.Message}    {ex.Source}    {ex.StackTrace}");
+                log.Error(msg);
                 TRdata.Clear();
                 
                 log.Debug($"Starting error reset procedure.....");
@@ -1658,7 +1735,7 @@ namespace TDFDow30
             try
             {
                 // Instantiate the connection
-                using (SqlConnection connection = new SqlConnection(dbConn))
+                using (SqlConnection connection = new SqlConnection(TDFGlobals.dbConnSymbols))
                 {
                     connection.Open();
                     using (SqlDataAdapter sqlDataAdapter = new SqlDataAdapter())
@@ -1718,7 +1795,7 @@ namespace TDFDow30
             try
             {
                 // Instantiate the connection
-                using (SqlConnection connection = new SqlConnection(dbConn))
+                using (SqlConnection connection = new SqlConnection(TDFGlobals.dbConnSymbols))
                 {
                     connection.Open();
                     using (SqlDataAdapter sqlDataAdapter = new SqlDataAdapter())
@@ -1781,7 +1858,7 @@ namespace TDFDow30
             try
             {
                 // Instantiate the connection
-                using (SqlConnection connection = new SqlConnection(dbConn))
+                using (SqlConnection connection = new SqlConnection(TDFGlobals.dbConnSymbols))
                 {
                     connection.Open();
                     using (SqlDataAdapter sqlDataAdapter = new SqlDataAdapter())
@@ -1873,7 +1950,7 @@ namespace TDFDow30
             try
             {
                 // Instantiate the connection
-                using (SqlConnection connection = new SqlConnection(dbConn))
+                using (SqlConnection connection = new SqlConnection(TDFGlobals.dbConnSymbols))
                 {
                     connection.Open();
                     using (SqlDataAdapter sqlDataAdapter = new SqlDataAdapter())
@@ -1942,7 +2019,7 @@ namespace TDFDow30
             try
             {
                 // Instantiate the connection
-                using (SqlConnection connection = new SqlConnection(dbConn))
+                using (SqlConnection connection = new SqlConnection(TDFGlobals.dbConnSymbols))
                 {
                     connection.Open();
                     using (SqlDataAdapter sqlDataAdapter = new SqlDataAdapter())
