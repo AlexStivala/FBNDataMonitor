@@ -28,6 +28,8 @@ namespace TDFDow30
         #region Globals
         DateTime referenceTime = DateTime.MaxValue;
         DateTime dataReceivedTime = DateTime.MaxValue;
+        DateTime lastKA;
+        DateTime lastDCEmail;
         public XmlDocument xmlResponse = new XmlDocument();
         public static List<Dow30Database.Dow30DB.Russel3000symbolData> Russel3000Data = new List<Dow30Database.Dow30DB.Russel3000symbolData>();
         public static List<Dow30Database.Dow30DB.Russel3000symbolData> R3000UpdateData = new List<Dow30Database.Dow30DB.Russel3000symbolData>();
@@ -291,8 +293,9 @@ namespace TDFDow30
                 string hostName = HostIPNameFunctions.GetHostName(hostIpAddress);
                 lblIpAddress.Text = hostIpAddress;
                 lblHostName.Text = hostName;
-
-
+                string server;
+                string User;
+                string PW;
 
                 IPAddress = Properties.Settings.Default.TDF_IPAddress;
                 Port = Properties.Settings.Default.TDF_Port;
@@ -322,9 +325,6 @@ namespace TDFDow30
                 string PwBk = Properties.Settings.Default.SQLPWBk;
                 bool useBackupServer = Properties.Settings.Default.UseBackupServer;
 
-                string server;
-                string User;
-                string PW;
                 if (useBackupServer)
                 {
                     server = backupServer;
@@ -818,7 +818,8 @@ namespace TDFDow30
             try
             {
                 // receive the data and determine the type
-                int bufLen = sender.bufLen;
+                //int bufLen = sender.bufLen;
+                int bufLen = data.Length;
                 rCnt++;
                 bytesReceived += bufLen;
                 byte[] rData = new byte[bufLen];
@@ -874,11 +875,32 @@ namespace TDFDow30
                         else if (mt == TDFconstants.DYNAMIC_CONTROL)
                         {
 
-                            TRControlMessage = itfHeaderAccess.ParseItfControlMessage(TRdata.ToArray());
-                            //log.Info($"Control Message Code: {TRControlMessage.control_Message_Header.messageCode}   Control Message: {TRControlMessage.Message}");
-                            log.Info($"Control Message Code: {TRControlMessage.control_Message_Header.messageCode}");
-                            TRdata.RemoveRange(0, TRmessage.itf_Header.msgSize + 1);
-                            dataLeft = TRdata.Count;
+                            try
+                            {
+                                TRControlMessage = itfHeaderAccess.ParseItfControlMessage(TRdata.ToArray());
+                                //log.Info($"Control Message Code: {TRControlMessage.control_Message_Header.messageCode}   Control Message: {TRControlMessage.Message}");
+                                string msg = $"CONTROL MESSAGE CODE RECEIVED: {TRControlMessage.control_Message_Header.messageCode}   CONTROL MESSAGE: {TRControlMessage.Message}";
+                                log.Info(msg);
+
+                                if (DateTime.Now > lastDCEmail.AddHours(1))
+                                {
+                                    Task.Run(() => SendEmail(msg));
+                                    lastDCEmail = DateTime.Now;
+                                }
+
+                                if (msgSize + 1 >= TRdata.Count)
+                                    len = TRdata.Count;
+                                else
+                                    len = msgSize + 1;
+                                TRdata.RemoveRange(0, len);
+                                dataLeft = TRdata.Count;
+                                //TRdata.RemoveRange(0, TRmessage.itf_Header.msgSize + 1);
+                                //dataLeft = TRdata.Count;
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error($"Dynamic Control Error: {ex}");
+                            }
                         }
                         else if (mt == TDFconstants.LOGOFF_RESPONSE)
                         {
@@ -931,6 +953,7 @@ namespace TDFDow30
                             try
                             {
                                 string ka = System.Text.Encoding.Default.GetString(TRmessage.Message.ToArray());
+                                lastKA = DateTime.Now;
                                 statusStr = "Keep Alive at " + DateTime.Now.ToString() + " 1 " + ka;
                                 messages.Add(statusStr);
                                 log.Info(statusStr);
